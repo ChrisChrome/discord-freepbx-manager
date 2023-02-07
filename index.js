@@ -257,7 +257,7 @@ dcClient.on('interactionCreate', async interaction => {
 											},
 											{
 												"name": "Password",
-												"value": result.result.fetchExtension.user.extPassword
+												"value": `||${result.result.fetchExtension.user.extPassword}||`
 											}
 										]
 									}]
@@ -292,7 +292,7 @@ dcClient.on('interactionCreate', async interaction => {
 								},
 								{
 									"name": "Password",
-									"value": result.result.fetchExtension.user.extPassword
+									"value": `||${result.result.fetchExtension.user.extPassword}||`
 								}
 							]
 						}],
