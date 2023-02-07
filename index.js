@@ -185,7 +185,7 @@ const {
 	Routes
 } = require('discord.js');
 const dcClient = new Discord.Client({
-	intents: ["Guilds", "GuildMembers"]
+	intents: ["Guilds"]
 });
 const rest = new REST({
 	version: '10'
