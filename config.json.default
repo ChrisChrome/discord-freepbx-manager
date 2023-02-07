@@ -1,0 +1,15 @@
+{
+	"freepbx": {
+		"server": "sip.example.com",
+		"url": "https://your.freepbx.instance",
+		"clientid": "clientid",
+		"allowedscopes": "gql",
+		"secret": "secret"
+	},
+	"discord": {
+		"token": "discordtoken",
+		"guildId": "mainguild",
+		"roleId": "userrole",
+		"devId": "yourdiscordid"
+	}
+}
