@@ -302,7 +302,7 @@ dcClient.on('interactionCreate', async interaction => {
 			}).catch((error) => {
 				// The user doesn't have an extension, create one
 				console.log(error)
-				interaction.reply({
+				interaction.editReply({
 					content: "You don't have an extension!",
 					ephemeral: true
 				});
