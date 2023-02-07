@@ -61,6 +61,13 @@ module.exports = {
 					}
 				}`;
 				break;
+			case 'delete':
+				return `mutation {
+					deleteExtension(input: {extensionId: ${args.ext}}) {
+						status
+					}
+				}`;
+				break;
 			case 'reload':
 				return `mutation {
 					doreload(input: {clientMutationId: "${args.id}"}) {

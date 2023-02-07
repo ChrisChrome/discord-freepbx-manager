@@ -10,6 +10,25 @@
 		"type": 1
 	},
 	{
+		"name": "delete",
+		"description": "Remove your extension from the Telefreunde Community Phone System",
+		"type": 1,
+		"options": [
+			{
+				"name": "confirm",
+				"description": "Confirm that you want to delete your extension. THIS CANNOT BE UNDONE!",
+				"type": 5,
+				"required": true,
+				"choices": [
+					{
+						"name": "yes",
+						"value": "yes"
+					}
+				]
+			}
+		]
+	},
+	{
 		"name": "list",
 		"description": "List all extensions on the Telefreunde Community Phone System",
 		"type": 1

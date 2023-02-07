@@ -58,6 +58,29 @@ const createExtension = (ext, name, uid) => {
 	});
 }
 
+// deleteExtension, takes an extension number
+const deleteExtension = (ext) => {
+	return new Promise((resolve, reject) => {
+		pbxClient.request(funcs.generateQuery('delete', {
+			ext: ext
+		})).then((result) => {
+			pbxClient.request(funcs.generateQuery('reload', {
+				id: "DeleteExt"
+			})).then((result) => {
+				res = {
+					"status": "deleted",
+					"result": result
+				}
+				resolve(res);
+			}).catch((error) => {
+				reject(error);
+			});
+		}).catch((error) => {
+			reject(error);
+		});
+	});
+}
+
 const lookupExtension = (ident, type) => { // type is either "ext" or "uid"
 	return new Promise((resolve, reject) => {
 		switch (type) {
@@ -291,6 +314,40 @@ dcClient.on('interactionCreate', async interaction => {
 				content: "Not Implemented Yet",
 				ephemeral: true
 			})
+			break;
+		case "delete":
+			if (interaction.options.get("confirm").value == false) {
+				interaction.reply({
+					content: "Please confirm you want to delete your extension by running `/delete confirm:true`",
+					ephemeral: true
+				})
+				break;
+			}
+			interaction.reply({ content: "Please Wait...", ephemeral: true })
+			lookupExtension(interaction.user.id, "uid").then((result) => {
+				if (result.status == "exists") {
+					// The user has an extension, delete it
+					deleteExtension(result.result.fetchExtension.user.extension).then((result) => {
+						if (result.status == "deleted") {
+							interaction.editReply({
+								content: "Extension Deleted!",
+								ephemeral: true
+							})
+							// Remove the role from the user on Discord based on the ID in the config file
+							let role = interaction.guild.roles.cache.find(role => role.id === config.discord.roleId);
+							interaction.member.roles.remove(role);
+						}
+					}).catch((error) => {
+						interaction.reply(`Error deleting extension: ${error}`);
+					});
+				}
+			}).catch((error) => {
+				// The user doesn't have an extension, return an ephemeral message saying so
+				interaction.editReply({
+					content: "You don't have an extension!",
+					ephemeral: true
+				});
+			});
 			break;
 		default:
 			break;
