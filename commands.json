@@ -1,0 +1,17 @@
+[
+	{
+		"name": "whoami",
+		"description": "Get your extension info if you have one",
+		"type": 1
+	},
+	{
+		"name": "new",
+		"description": "Get an extension on the Telefreunde Community Phone System",
+		"type": 1
+	},
+	{
+		"name": "list",
+		"description": "List all extensions on the Telefreunde Community Phone System",
+		"type": 1
+	}
+]
