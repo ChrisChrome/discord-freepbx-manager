@@ -16,6 +16,28 @@ const pbxClient = new FreepbxGqlClient(config.freepbx.url, {
 
 // Some functions for FreePBX
 
+// updatePresence, Takes the total number of extensions, and sets it as the discord status
+const updatePresence = () => {
+	return new Promise((resolve, reject) => {
+		pbxClient.request(funcs.generateQuery('list')).then((result) => {
+			var exts = result.fetchAllExtensions.extension.length;
+			dcClient.user.setPresence({
+				status: "online",
+				activities: [
+					{
+						name: exts + " extensions",
+						type: "WATCHING"
+					}
+				]
+			})
+			resolve();
+		}).catch((error) => {
+			reject(error);
+		});
+	});
+}
+			
+
 const createExtension = (ext, name, uid) => {
 	return new Promise((resolve, reject) => {
 		pbxClient.request(funcs.generateQuery('lookup', {
@@ -210,6 +232,20 @@ dcClient.on('ready', () => {
 		}
 	})();
 
+	// Presence Stuff
+	updatePresence().then(() => {
+		console.log("Presence updated");
+	}).catch((error) => {
+		console.log(error);
+	});
+	// Run every 5 minutes
+	setInterval(() => {
+		updatePresence().then(() => {
+			console.log("Presence updated");
+		}).catch((error) => {
+			console.log(error);
+		});
+	}, 300000);
 });
 
 dcClient.on('interactionCreate', async interaction => {
