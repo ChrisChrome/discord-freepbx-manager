@@ -214,7 +214,6 @@ dcClient.on('ready', () => {
 
 dcClient.on('interactionCreate', async interaction => {
 	if (!interaction.isCommand()) return;
-	if (interaction.user.id != config.discord.devId) return; // Only allow the dev to use this bot (for now)
 	const {
 		commandName
 	} = interaction;
