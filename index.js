@@ -16,27 +16,17 @@ const pbxClient = new FreepbxGqlClient(config.freepbx.url, {
 
 // Some functions for FreePBX
 
-// updatePresence, Takes the total number of extensions, and sets it as the discord status
-const updatePresence = () => {
+
+const getExtCount = () => {
 	return new Promise((resolve, reject) => {
-		pbxClient.request(funcs.generateQuery('list')).then((result) => {
-			var exts = result.fetchAllExtensions.extension.length;
-			dcClient.user.setPresence({
-				status: "online",
-				activities: [
-					{
-						name: exts + " extensions",
-						type: "WATCHING"
-					}
-				]
-			})
-			resolve();
+		pbxClient.request(funcs.generateQuery('list', {})).then((result) => {
+			resolve(result.fetchAllExtensions.extension.length);
 		}).catch((error) => {
 			reject(error);
 		});
 	});
 }
-			
+
 
 const createExtension = (ext, name, uid) => {
 	return new Promise((resolve, reject) => {
@@ -233,15 +223,28 @@ dcClient.on('ready', () => {
 	})();
 
 	// Presence Stuff
-	updatePresence().then(() => {
-		console.log("Presence updated");
+	getExtCount().then((result) => {
+		dcClient.user.setPresence({
+			activities: [{
+				name: `${result} extensions`,
+				type: "WATCHING"
+			}],
+			status: "online"
+		});
 	}).catch((error) => {
 		console.log(error);
 	});
+
 	// Run every 5 minutes
 	setInterval(() => {
-		updatePresence().then(() => {
-			console.log("Presence updated");
+		getExtCount().then((result) => {
+			dcClient.user.setPresence({
+				activities: [{
+					name: `${result} extensions`,
+					type: "WATCHING"
+				}],
+				status: "online"
+			});
 		}).catch((error) => {
 			console.log(error);
 		});
@@ -309,7 +312,10 @@ dcClient.on('interactionCreate', async interaction => {
 			});
 			break;
 		case "whoami":
-			interaction.reply({ content: "<a:loading:1072558235019649124>", ephemeral: true })
+			interaction.reply({
+				content: "<a:loading:1072558235019649124>",
+				ephemeral: true
+			})
 			lookupExtension(interaction.user.id, "uid").then((result) => {
 				if (result.status == "exists") {
 					// The user already has an extension, return an ephemeral message saying so
@@ -343,7 +349,9 @@ dcClient.on('interactionCreate', async interaction => {
 			break;
 
 		case "list":
-			interaction.reply({ content: "<a:loading:1072558235019649124>" })
+			interaction.reply({
+				content: "<a:loading:1072558235019649124>"
+			})
 			pbxClient.request(funcs.generateQuery("list", {})).then((result) => {
 				let extensions = result.fetchAllExtensions.extension;
 				// key:value pairs of extension:username
@@ -375,7 +383,10 @@ dcClient.on('interactionCreate', async interaction => {
 				})
 				break;
 			}
-			interaction.reply({ content: "<a:loading:1072558235019649124>", ephemeral: true })
+			interaction.reply({
+				content: "<a:loading:1072558235019649124>",
+				ephemeral: true
+			})
 			lookupExtension(interaction.user.id, "uid").then((result) => {
 				if (result.status == "exists") {
 					// The user has an extension, delete it
