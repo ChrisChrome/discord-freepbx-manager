@@ -221,7 +221,7 @@ dcClient.on('interactionCreate', async interaction => {
 	switch (commandName) {
 		case "new":
 			interaction.reply({
-				content: "Please Wait...",
+				content: "<a:loading:1072556278884352050>",
 				ephemeral: true
 			})
 			lookupExtension(interaction.user.id, "uid").then((result) => {
@@ -274,7 +274,7 @@ dcClient.on('interactionCreate', async interaction => {
 			});
 			break;
 		case "whoami":
-			interaction.reply({ content: "Please Wait...", ephemeral: true })
+			interaction.reply({ content: "<a:loading:1072556278884352050>", ephemeral: true })
 			lookupExtension(interaction.user.id, "uid").then((result) => {
 				if (result.status == "exists") {
 					// The user already has an extension, return an ephemeral message saying so
@@ -308,10 +308,31 @@ dcClient.on('interactionCreate', async interaction => {
 			break;
 
 		case "list":
-			interaction.reply({
-				content: "Not Implemented Yet",
-				ephemeral: true
-			})
+			interaction.reply({ content: "<a:loading:1072556278884352050>", ephemeral: true })
+			pbxClient.request("list", {}).then((result) => {
+				let extensions = result.response.extension;
+				// key:value pairs of extension:username
+				let extensionList = {};
+				extensions.forEach((extension) => {
+					extensionList[extension.extension] = extension.name;
+				});
+				interaction.editReply({
+					content: "",
+					embeds: [{
+						"title": "Extension List",
+						"color": 0x00ff00,
+						"description": `The SIP server is \`${config.freepbx.server}\``,
+						"fields": Object.keys(extensionList).map((extension) => {
+							return {
+								"name": extension,
+								"value": extensionList[extension]
+							}
+						})
+					}]
+				});
+			}).catch((error) => {
+				interaction.editReply(`Error listing extensions: ${error}`);
+			});
 			break;
 		case "delete":
 			if (interaction.options.get("confirm").value == false) {
@@ -321,7 +342,7 @@ dcClient.on('interactionCreate', async interaction => {
 				})
 				break;
 			}
-			interaction.reply({ content: "Please Wait...", ephemeral: true })
+			interaction.reply({ content: "<a:loading:1072556278884352050>", ephemeral: true })
 			lookupExtension(interaction.user.id, "uid").then((result) => {
 				if (result.status == "exists") {
 					// The user has an extension, delete it
