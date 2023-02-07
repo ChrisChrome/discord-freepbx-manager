@@ -128,15 +128,26 @@ const findNextExtension = () => {
 			// Find the highest extension
 			var highest = 0;
 			// output looks like {fetchAllExtensions: { extension: [{user:{extension: 100, name: "Test"}}]}}
+			// Look out for gaps in the extension numbers, if there are any, use that one, if not, use the highest + 1
+			var exts = [];
 			result.fetchAllExtensions.extension.forEach((ext) => {
-				if (ext.user.extension > highest) {
-					highest = ext.user.extension;
-				}
+				exts.push(ext.user.extension);
 			});
+			exts.sort((a, b) => a - b);
+			for (var i = 0; i < exts.length; i++) {
+				if (exts[i] != i + 100) {
+					highest = i + 100;
+					break;
+				}
+			}
+			if (highest == 0) {
+				highest = String(Number(exts[exts.length - 1]) + 1);
+			}
+
 			// Return the next extension
 			res = {
 				"status": "success",
-				"result": String(Number(highest) + 1)
+				"result": String(highest)
 			}
 			resolve(res);
 		}).catch((error) => {
