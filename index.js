@@ -7,7 +7,6 @@ const {
 	FreepbxGqlClient,
 	gql
 } = require("freepbx-graphql-client");
-console.log(config.freepbx.clientid)
 const pbxClient = new FreepbxGqlClient(config.freepbx.url, {
 	client: {
 		id: config.freepbx.clientid,
@@ -241,7 +240,6 @@ dcClient.on('interactionCreate', async interaction => {
 						let ext = result.result;
 						let name = interaction.user.tag;
 						interaction.editReply(`Creating extension ${ext}...`)
-						console.log(`Creating extension ${ext} for ${name} (${uid})`)
 						// Create the extension
 						createExtension(ext, name, uid).then((result) => {
 							if (result.status == "created") {
