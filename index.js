@@ -309,7 +309,7 @@ dcClient.on('interactionCreate', async interaction => {
 
 		case "list":
 			interaction.reply({ content: "<a:loading:1072556278884352050>", ephemeral: true })
-			pbxClient.request("list", {}).then((result) => {
+			pbxClient.request(funcs.generateQuery("list", {})).then((result) => {
 				let extensions = result.response.extension;
 				// key:value pairs of extension:username
 				let extensionList = {};
