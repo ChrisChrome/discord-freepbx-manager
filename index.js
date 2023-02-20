@@ -282,7 +282,7 @@ dcClient.on('interactionCreate', async interaction => {
 						createExtension(ext, name, uid).then((result) => {
 							if (result.status == "created") {
 								interaction.editReply({
-									content: "",
+									content: "✅",
 									embeds: [{
 										"title": "Extension Created!",
 										"color": 0x00ff00,
@@ -320,7 +320,7 @@ dcClient.on('interactionCreate', async interaction => {
 				if (result.status == "exists") {
 					// The user already has an extension, return an ephemeral message saying so
 					interaction.editReply({
-						content: "",
+						content: "✅",
 						embeds: [{
 							"title": "Extension Info",
 							"color": 0x00ff00,
@@ -364,7 +364,7 @@ dcClient.on('interactionCreate', async interaction => {
 					extensionList1 += `${key}: ${extensionList[key]}\n`;
 				}
 				interaction.editReply({
-					content: "",
+					content: "✅",
 					embeds: [{
 						"title": "Extension List",
 						"color": 0x00ff00,
