@@ -6,12 +6,12 @@
 	},
 	{
 		"name": "new",
-		"description": "Get an extension on the Telefreunde Community Phone System",
+		"description": "Get an extension on the LiteNet Phone System",
 		"type": 1
 	},
 	{
 		"name": "delete",
-		"description": "Remove your extension from the Telefreunde Community Phone System",
+		"description": "Remove your extension from the LiteNet Phone System",
 		"type": 1,
 		"options": [
 			{
@@ -30,7 +30,7 @@
 	},
 	{
 		"name": "list",
-		"description": "List all extensions on the Telefreunde Community Phone System",
+		"description": "List all extensions on the LiteNet Phone System",
 		"type": 1
 	}
 ]
