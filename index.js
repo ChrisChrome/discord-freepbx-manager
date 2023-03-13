@@ -258,10 +258,7 @@ dcClient.on('interactionCreate', async interaction => {
 	} = interaction;
 	switch (commandName) {
 		case "new":
-			interaction.reply({
-				content: "<a:loading:1072558235019649124>",
-				ephemeral: true
-			})
+			interaction.deferReply({ephemeral: true});
 			lookupExtension(interaction.user.id, "uid").then((result) => {
 				if (result.status == "exists") {
 					// The user already has an extension, return an ephemeral message saying so
@@ -312,10 +309,7 @@ dcClient.on('interactionCreate', async interaction => {
 			});
 			break;
 		case "whoami":
-			interaction.reply({
-				content: "<a:loading:1072558235019649124>",
-				ephemeral: true
-			})
+			interaction.deferReply({ephemeral: true});
 			lookupExtension(interaction.user.id, "uid").then((result) => {
 				if (result.status == "exists") {
 					// The user already has an extension, return an ephemeral message saying so
@@ -349,9 +343,7 @@ dcClient.on('interactionCreate', async interaction => {
 			break;
 
 		case "list":
-			interaction.reply({
-				content: "<a:loading:1072558235019649124>"
-			})
+			interaction.deferReply({ephemeral: false});
 			pbxClient.request(funcs.generateQuery("list", {})).then((result) => {
 				let extensions = result.fetchAllExtensions.extension;
 				// key:value pairs of extension:username
@@ -383,10 +375,7 @@ dcClient.on('interactionCreate', async interaction => {
 				})
 				break;
 			}
-			interaction.reply({
-				content: "<a:loading:1072558235019649124>",
-				ephemeral: true
-			})
+			interaction.deferReply({ephemeral: true});
 			lookupExtension(interaction.user.id, "uid").then((result) => {
 				if (result.status == "exists") {
 					// The user has an extension, delete it
