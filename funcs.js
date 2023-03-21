@@ -55,7 +55,7 @@ module.exports = {
 						email: "${args.uid}"
 						vmEnable: true
 						vmPassword: "${args.ext}"
-						maxContacts: 5
+						maxContacts: "5"
 						umEnable: false
 					}) {
 						status
