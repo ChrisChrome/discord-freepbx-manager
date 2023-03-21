@@ -55,11 +55,14 @@ module.exports = {
 						email: "${args.uid}"
 						vmEnable: true
 						vmPassword: "${args.ext}"
+						maxContacts: 5
+						umEnable: false
 					}) {
 						status
 					}
 				}`;
 				break;
+
 			case 'delete':
 				return `mutation {
 					deleteExtension(input: {extensionId: ${args.ext}}) {
