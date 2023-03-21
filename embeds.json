@@ -1,0 +1,14 @@
+{
+	"_comment": "This file is a work in progress, and is currently unused. To be used later :)",
+	"extInfo": {
+		"title": "LiteNet Phone Systems",
+		"description": "This is the full extension list for our community phone system!",
+		"color": 65535,
+		"fields": [
+			{
+				"name": "Extensions",
+				"value": "this gets replaced in code"
+			}
+		]
+	}
+}

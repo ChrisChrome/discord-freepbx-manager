@@ -132,3 +132,5 @@ dist
 config.json
 config.json.old
 config.json.disabled
+
+test.js

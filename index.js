@@ -165,7 +165,7 @@ const findNextExtension = () => {
 			// Look out for gaps in the extension numbers, if there are any, use that one, if not, use the highest + 1
 			var exts = [];
 			result.fetchAllExtensions.extension.forEach((ext) => {
-				exts.push(ext.user.extension);
+				exts.push(Number(ext.user.extension));
 			});
 			exts.sort((a, b) => a - b);
 			// Start should be the lowest extension. If none exists use config value
@@ -423,4 +423,12 @@ dcClient.on('interactionCreate', async interaction => {
 	}
 });
 
+pbxClient.request(funcs.generateQuery('list', {})).then((result) => {
+	console.log(JSON.stringify(result, null, 2));
+}).catch((error) => {
+	console.log(error);
+});
+
+/*
 dcClient.login(config.discord.token);
+*/
