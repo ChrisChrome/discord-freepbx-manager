@@ -423,12 +423,5 @@ dcClient.on('interactionCreate', async interaction => {
 	}
 });
 
-pbxClient.request(funcs.generateQuery('list', {})).then((result) => {
-	console.log(JSON.stringify(result, null, 2));
-}).catch((error) => {
-	console.log(error);
-});
 
-/*
 dcClient.login(config.discord.token);
-*/
