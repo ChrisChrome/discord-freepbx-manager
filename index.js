@@ -287,8 +287,10 @@ dcClient.on('ready', () => {
 
 dcClient.on("guildMemberRemove", (member) => {
 	// Delete the extension if the user leaves the server
+	console.log(`User ${member.id} left the server`)
 	lookupExtension(member.id, "uid").then((result) => {
 		if (result.status == "exists") {
+			console.log(`User ${member.id} has extension ${result.result.fetchVoiceMail.extension}, deleting it`)
 			deleteExtension(result.result.fetchVoiceMail.extension).then((result) => {
 				console.log(`Deleted extension ${result.result.fetchVoiceMail.extension} because the user left the server`);
 			}).catch((error) => {
