@@ -1,7 +1,7 @@
 //Load static files
 const config = require("./config.json");
 const funcs = require("./funcs.js");
-
+const colors = require("colors");
 // FreePBX GraphQL Client
 const {
 	FreepbxGqlClient,
@@ -213,21 +213,21 @@ const rest = new REST({
 }).setToken(config.discord.token);
 
 dcClient.on('ready', () => {
-	console.log(`Logged in as ${dcClient.user.tag}!`);
+	console.log(`${colors.cyan("[INFO]")} Logged in as ${dcClient.user.tag}!`);
 	// Set up application commands
 	const commands = require('./commands.json');
 
 	(async () => {
 		try {
-			console.log('Started refreshing application (/) commands.');
+			console.log(`${colors.cyan("[INFO]")} Started refreshing application (/) commands.`);
 			await rest.put(
 				Routes.applicationGuildCommands(dcClient.user.id, config.discord.guildId), {
 					body: commands
 				}
 			);
-			console.log('Successfully reloaded application (/) commands.');
+			console.log(`${colors.cyan("[INFO]")} Successfully reloaded application (/) commands.`);
 		} catch (error) {
-			console.error(error);
+			console.error(`${colors.red("[ERROR]")} ${error}`);
 		}
 	})();
 
@@ -241,7 +241,7 @@ dcClient.on('ready', () => {
 			status: "online"
 		});
 	}).catch((error) => {
-		console.log(error);
+		console.log(`${colors.red("[ERROR]")} ${error}`);
 	});
 
 	// Run every 5 minutes
@@ -255,7 +255,7 @@ dcClient.on('ready', () => {
 				status: "online"
 			});
 		}).catch((error) => {
-			console.log(error);
+			console.log(`${colors.red("[ERROR]")} ${error}`);
 		});
 	}, 300000);
 
@@ -271,10 +271,11 @@ dcClient.on('ready', () => {
 					// They're in the server, do nothing
 				}).catch((error) => {
 					// They're not in the server, delete the extension
+					console.log(`${colors.cyan("[INFO]")} ${extension.user.extension} is not in the server, deleting it`);
 					deleteExtension(extension.user.extension).then((result) => {
-						console.log(`Deleted extension ${extension.user.extension} because the user is no longer in the server`);
+						console.log(`${colors.cyan("[INFO]")} Deleted extension ${extension.user.extension} because the user is no longer in the server`);
 					}).catch((error) => {
-						console.log(error);
+						console.log(`${colors.red("[ERROR]")} ${error}`);
 					});
 				});
 
@@ -287,18 +288,18 @@ dcClient.on('ready', () => {
 
 dcClient.on("guildMemberRemove", (member) => {
 	// Delete the extension if the user leaves the server
-	console.log(`User ${member.id} left the server`)
+	console.log(`${colors.cyan("[INFO]")} User ${member.id} left the server`)
 	lookupExtension(member.id, "uid").then((result) => {
 		if (result.status == "exists") {
-			console.log(`User ${member.id} has extension ${result.result.fetchVoiceMail.extension}, deleting it`)
+			console.log(`${colors.cyan("[INFO]")} User ${member.id} has extension ${result.result.fetchVoiceMail.extension}, deleting it`)
 			deleteExtension(result.result.fetchVoiceMail.extension).then((result) => {
-				console.log(`Deleted extension ${result.result.fetchVoiceMail.extension} because the user left the server`);
+				console.log(`${colors.cyan("[INFO]")} Deleted extension ${result.result.fetchVoiceMail.extension} because the user left the server`);
 			}).catch((error) => {
-				console.log(error);
+				console.log(`${colors.red("[ERROR]")} ${error}`);
 			});
 		}
 	}).catch((error) => {
-		console.log(error);
+		console.log(`${colors.red("[ERROR]")} ${error}`);
 	});
 });
 
@@ -389,7 +390,7 @@ dcClient.on('interactionCreate', async interaction => {
 				}
 			}).catch((error) => {
 				// The user doesn't have an extension, create one
-				console.log(error)
+				console.log(`${colors.red("[ERROR]")} ${error}`)
 				interaction.editReply({
 					content: "You don't have an extension!",
 					ephemeral: true
