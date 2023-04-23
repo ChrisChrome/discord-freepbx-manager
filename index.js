@@ -258,6 +258,46 @@ dcClient.on('ready', () => {
 			console.log(error);
 		});
 	}, 300000);
+
+	// Lookup all extensions and check if they're still in the server
+	// If they're not, delete them
+	// Run once on startup
+	pbxClient.request(funcs.generateQuery("list", {})).then((result) => {
+		let extensions = result.fetchAllExtensions.extension;
+		extensions.forEach((extension) => {
+			lookupExtension(extension.user.extension, "ext").then((result) => {
+				// Fetch Discord user using ID stored in result.result.fetchVoiceMail.email, and see if they're in the server
+				dcClient.guilds.cache.get(config.discord.guildId).members.fetch(result.result.fetchVoiceMail.email).then((member) => {
+					// They're in the server, do nothing
+				}).catch((error) => {
+					// They're not in the server, delete the extension
+					deleteExtension(extension.user.extension).then((result) => {
+						console.log(`Deleted extension ${extension.user.extension} because the user is no longer in the server`);
+					}).catch((error) => {
+						console.log(error);
+					});
+				});
+
+			});
+		});
+	}).catch((error) => {
+		interaction.editReply(`Error listing extensions: ${error}`);
+	});
+});
+
+dcClient.on("guildMemberRemove", (member) => {
+	// Delete the extension if the user leaves the server
+	lookupExtension(member.id, "uid").then((result) => {
+		if (result.status == "exists") {
+			deleteExtension(result.result.fetchVoiceMail.extension).then((result) => {
+				console.log(`Deleted extension ${result.result.fetchVoiceMail.extension} because the user left the server`);
+			}).catch((error) => {
+				console.log(error);
+			});
+		}
+	}).catch((error) => {
+		console.log(error);
+	});
 });
 
 dcClient.on('interactionCreate', async interaction => {
