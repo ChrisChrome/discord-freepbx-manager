@@ -11,6 +11,7 @@
 		"token": "discordtoken",
 		"guildId": "mainguild",
 		"roleId": "userrole",
-		"devId": "yourdiscordid"
+		"devId": "yourdiscordid",
+		"logId": "logchannel"
 	}
 }

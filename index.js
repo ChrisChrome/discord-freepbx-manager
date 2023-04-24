@@ -211,9 +211,10 @@ const dcClient = new Discord.Client({
 const rest = new REST({
 	version: '10'
 }).setToken(config.discord.token);
-
+var logChannel;
 dcClient.on('ready', () => {
 	console.log(`${colors.cyan("[INFO]")} Logged in as ${dcClient.user.tag}!`);
+	logChannel = dcClient.channels.cache.get(config.discord.logChannel);
 	// Set up application commands
 	const commands = require('./commands.json');
 
@@ -274,6 +275,13 @@ dcClient.on('ready', () => {
 					console.log(`${colors.cyan("[INFO]")} ${extension.user.extension} is not in the server, deleting it`);
 					deleteExtension(extension.user.extension).then((result) => {
 						console.log(`${colors.cyan("[INFO]")} Deleted extension ${extension.user.extension} because the user is no longer in the server`);
+						logChannel.send({
+							embeds: [{
+								title: "Extension Deleted",
+								description: `${member} (${member.id}) left the server, so their extension (${extension.user.extension}) was deleted`,
+								color: 0xff0000
+							}]
+						});
 					}).catch((error) => {
 						console.log(`${colors.red("[ERROR]")} ${error}`);
 					});
@@ -294,6 +302,13 @@ dcClient.on("guildMemberRemove", (member) => {
 			console.log(`${colors.cyan("[INFO]")} User ${member.id} has extension ${result.result.fetchVoiceMail.extension}, deleting it`)
 			deleteExtension(result.result.fetchVoiceMail.extension).then((result) => {
 				console.log(`${colors.cyan("[INFO]")} Deleted extension ${result.result.fetchVoiceMail.extension} because the user left the server`);
+				logChannel.send({
+					embeds: [{
+						title: "Extension Deleted",
+						description: `${member} (${member.id}) left the server, so their extension (${extension.user.extension}) was deleted`,
+						color: 0xff0000
+					}]
+				});
 			}).catch((error) => {
 				console.log(`${colors.red("[ERROR]")} ${error}`);
 			});
@@ -349,6 +364,13 @@ dcClient.on('interactionCreate', async interaction => {
 										]
 									}]
 								})
+								logChannel.send({
+									embeds: [{
+										title: "Extension Created",
+										description: `${interaction.user} (${interaction.user.id}) created extension ${ext}`,
+										color: 0x00ff00
+									}]
+								});
 								// Add the role to the user on Discord based on the ID in the config file
 								let role = interaction.guild.roles.cache.find(role => role.id === config.discord.roleId);
 								interaction.member.roles.add(role);
@@ -444,7 +466,14 @@ dcClient.on('interactionCreate', async interaction => {
 							interaction.editReply({
 								content: "Extension Deleted!",
 								ephemeral: true
-							})
+							});
+							logChannel.send({
+								embeds: [{
+									title: "Extension Deleted",
+									description: `${member} (${member.id}) chose to delete their extension, ${result.result.fetchExtension.user.extension}`,
+									color: 0xff0000
+								}]
+							});
 							// Remove the role from the user on Discord based on the ID in the config file
 							let role = interaction.guild.roles.cache.find(role => role.id === config.discord.roleId);
 							interaction.member.roles.remove(role);
