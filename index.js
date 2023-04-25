@@ -289,9 +289,110 @@ dcClient.on('ready', () => {
 
 			});
 		});
-	}).catch((error) => {
-		interaction.editReply(`Error listing extensions: ${error}`);
-	});
+	})
+
+	// Run every 5 minutes
+	const extListChannel = dcClient.channels.cache.get(config.discord.extList);
+	// Find the latest message from the bot in extListChannel, if there isn't one, send one. There can be other messages in the channel
+	// Sends the same message as the list command
+	setInterval(async () => {
+		await extListChannel.messages.fetch({
+			limit: 1
+		}).then((messages) => {
+			if (messages.size == 0) {
+				pbxClient.request(funcs.generateQuery("list", {})).then((result) => {
+					let extensions = result.fetchAllExtensions.extension;
+					// key:value pairs of extension:username
+					let extensionList = {};
+					extensions.forEach((extension) => {
+						extensionList[extension.user.extension] = extension.user.name;
+					});
+					extensionList1 = "";
+					for (let key in extensionList) {
+						extensionList1 += `${key}: ${extensionList[key]}\n`;
+					}
+					extListChannel.send({
+						content: "",
+						embeds: [{
+							"title": "Extension List",
+							"color": 0x00ff00,
+							"description": `${extensionList1}`
+						}]
+					});
+				})
+			} else {
+				pbxClient.request(funcs.generateQuery("list", {})).then((result) => {
+					let extensions = result.fetchAllExtensions.extension;
+					// key:value pairs of extension:username
+					let extensionList = {};
+					extensions.forEach((extension) => {
+						extensionList[extension.user.extension] = extension.user.name;
+					});
+					extensionList1 = "";
+					for (let key in extensionList) {
+						extensionList1 += `${key}: ${extensionList[key]}\n`;
+					}
+					messages.first().edit({
+						content: "",
+						embeds: [{
+							"title": "Extension List",
+							"color": 0x00ff00,
+							"description": `${extensionList1}`
+						}]
+					});
+				})
+			}
+		})
+		console.log(`${colors.cyan("[INFO]")} Updated extension list`);
+	}, 300000);
+	// Also run on startup
+	extListChannel.messages.fetch({
+		limit: 1
+	}).then((messages) => {
+		if (messages.size == 0) {
+			pbxClient.request(funcs.generateQuery("list", {})).then((result) => {
+				let extensions = result.fetchAllExtensions.extension;
+				// key:value pairs of extension:username
+				let extensionList = {};
+				extensions.forEach((extension) => {
+					extensionList[extension.user.extension] = extension.user.name;
+				});
+				extensionList1 = "";
+				for (let key in extensionList) {
+					extensionList1 += `${key}: ${extensionList[key]}\n`;
+				}
+				extListChannel.send({
+					content: "",
+					embeds: [{
+						"title": "Extension List",
+						"color": 0x00ff00,
+						"description": `${extensionList1}`
+					}]
+				});
+			})
+		} else {
+			pbxClient.request(funcs.generateQuery("list", {})).then((result) => {
+				let extensions = result.fetchAllExtensions.extension;
+				// key:value pairs of extension:username
+				let extensionList = {};
+				extensions.forEach((extension) => {
+					extensionList[extension.user.extension] = extension.user.name;
+				});
+				extensionList1 = "";
+				for (let key in extensionList) {
+					extensionList1 += `${key}: ${extensionList[key]}\n`;
+				}
+				messages.first().edit({
+					content: "",
+					embeds: [{
+						"title": "Extension List",
+						"color": 0x00ff00,
+						"description": `${extensionList1}`
+					}]
+				});
+			})
+		}
+	})
 });
 
 dcClient.on("guildMemberRemove", (member) => {

@@ -12,6 +12,7 @@
 		"guildId": "mainguild",
 		"roleId": "userrole",
 		"devId": "yourdiscordid",
-		"logId": "logchannel"
+		"logId": "logchannel",
+		"extList": "extension list channel"
 	}
 }
