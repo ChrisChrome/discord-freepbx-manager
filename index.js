@@ -343,7 +343,6 @@ dcClient.on('ready', () => {
 				})
 			}
 		})
-		console.log(`${colors.cyan("[INFO]")} Updated extension list`);
 	}, 300000);
 	// Also run on startup
 	extListChannel.messages.fetch({
