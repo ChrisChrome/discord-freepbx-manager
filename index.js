@@ -214,7 +214,7 @@ const rest = new REST({
 var logChannel;
 dcClient.on('ready', () => {
 	console.log(`${colors.cyan("[INFO]")} Logged in as ${dcClient.user.tag}!`);
-	logChannel = dcClient.channels.cache.get(config.discord.logChannel);
+	logChannel = dcClient.channels.cache.get(config.discord.logId);
 	// Set up application commands
 	const commands = require('./commands.json');
 
