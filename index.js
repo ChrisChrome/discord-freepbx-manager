@@ -212,41 +212,36 @@ const rest = new REST({
 	version: '10'
 }).setToken(config.discord.token);
 var logChannel;
-dcClient.on('ready', () => {
-	console.log(`${colors.cyan("[INFO]")} Logged in as ${dcClient.user.tag}!`);
-	logChannel = dcClient.channels.cache.get(config.discord.logId);
-	// Set up application commands
-	const commands = require('./commands.json');
+var sendLog;
 
-	(async () => {
-		try {
-			console.log(`${colors.cyan("[INFO]")} Started refreshing application (/) commands.`);
-			await rest.put(
-				Routes.applicationGuildCommands(dcClient.user.id, config.discord.guildId), {
-					body: commands
-				}
-			);
-			console.log(`${colors.cyan("[INFO]")} Successfully reloaded application (/) commands.`);
-		} catch (error) {
-			console.error(`${colors.red("[ERROR]")} ${error}`);
-		}
-	})();
+dcClient.on('ready', async () => {
+	await dcClient.channels.fetch(config.discord.logId).then((channel) => {
+		sendLog = (message) => {
+			channel.send(`\`\`\`ansi\n${message}\`\`\``);
+			console.log(message);
+		};
 
-	// Presence Stuff
-	getExtCount().then((result) => {
-		dcClient.user.setPresence({
-			activities: [{
-				name: `${result} extensions`,
-				type: "WATCHING"
-			}],
-			status: "online"
-		});
-	}).catch((error) => {
-		console.log(`${colors.red("[ERROR]")} ${error}`);
-	});
+		sendLog(`${colors.cyan("[INFO]")} Logged in as ${dcClient.user.tag}!`);
 
-	// Run every 5 minutes
-	setInterval(() => {
+
+		// Set up application commands
+		const commands = require('./commands.json');
+
+		(async () => {
+			try {
+				sendLog(`${colors.cyan("[INFO]")} Started refreshing application (/) commands.`);
+				await rest.put(
+					Routes.applicationGuildCommands(dcClient.user.id, config.discord.guildId), {
+						body: commands
+					}
+				);
+				sendLog(`${colors.cyan("[INFO]")} Successfully reloaded application (/) commands.`);
+			} catch (error) {
+				console.error(`${colors.red("[ERROR]")} ${error}`);
+			}
+		})();
+
+		// Presence Stuff
 		getExtCount().then((result) => {
 			dcClient.user.setPresence({
 				activities: [{
@@ -256,51 +251,107 @@ dcClient.on('ready', () => {
 				status: "online"
 			});
 		}).catch((error) => {
-			console.log(`${colors.red("[ERROR]")} ${error}`);
+			sendLog(`${colors.red("[ERROR]")} ${error}`);
 		});
-	}, 300000);
 
-	// Lookup all extensions and check if they're still in the server
-	// If they're not, delete them
-	// Run once on startup
-	pbxClient.request(funcs.generateQuery("list", {})).then((result) => {
-		let extensions = result.fetchAllExtensions.extension;
-		extensions.forEach((extension) => {
-			lookupExtension(extension.user.extension, "ext").then((result) => {
-				if(result.result.fetchVoiceMail.email == null) {
-					// Extension is not part of the bot, do nothing
-					return;
-				};
-				// Fetch Discord user using ID stored in result.result.fetchVoiceMail.email, and see if they're in the server
-				dcClient.guilds.cache.get(config.discord.guildId).members.fetch(result.result.fetchVoiceMail.email).then((member) => {
-					// They're in the server, do nothing
-				}).catch((error) => {
-					// They're not in the server, delete the extension
-					console.log(`${colors.cyan("[INFO]")} ${extension.user.extension} is not in the server, deleting it`);
-					deleteExtension(extension.user.extension).then((result) => {
-						console.log(`${colors.cyan("[INFO]")} Deleted extension ${extension.user.extension} because the user is no longer in the server`);
-						logChannel.send({
+		// Run every 5 minutes
+		setInterval(() => {
+			getExtCount().then((result) => {
+				dcClient.user.setPresence({
+					activities: [{
+						name: `${result} extensions`,
+						type: "WATCHING"
+					}],
+					status: "online"
+				});
+			}).catch((error) => {
+				sendLog(`${colors.red("[ERROR]")} ${error}`);
+			});
+		}, 300000);
+
+		// Lookup all extensions and check if they're still in the server
+		// If they're not, delete them
+		// Run once on startup
+		pbxClient.request(funcs.generateQuery("list", {})).then((result) => {
+			let extensions = result.fetchAllExtensions.extension;
+			extensions.forEach((extension) => {
+				lookupExtension(extension.user.extension, "ext").then((result) => {
+					if (result.result.fetchVoiceMail.email == null) {
+						// Extension is not part of the bot, do nothing
+						return;
+					};
+					// Fetch Discord user using ID stored in result.result.fetchVoiceMail.email, and see if they're in the server
+					dcClient.guilds.cache.get(config.discord.guildId).members.fetch(result.result.fetchVoiceMail.email).then((member) => {
+						// They're in the server, do nothing
+					}).catch((error) => {
+						// They're not in the server, delete the extension
+						sendLog(`${colors.cyan("[INFO]")} ${extension.user.extension} is not in the server, deleting it`);
+						deleteExtension(extension.user.extension).then((result) => {
+							sendLog(`${colors.cyan("[INFO]")} Deleted extension ${extension.user.extension} because the user is no longer in the server`);
+						}).catch((error) => {
+							sendLog(`${colors.red("[ERROR]")} ${error}`);
+						});
+					});
+
+				});
+			});
+		})
+
+		// Run every 5 minutes
+		const extListChannel = dcClient.channels.cache.get(config.discord.extList);
+		// Find the latest message from the bot in extListChannel, if there isn't one, send one. There can be other messages in the channel
+		// Sends the same message as the list command
+		setInterval(async () => {
+			await extListChannel.messages.fetch({
+				limit: 1
+			}).then((messages) => {
+				if (messages.size == 0) {
+					pbxClient.request(funcs.generateQuery("list", {})).then((result) => {
+						let extensions = result.fetchAllExtensions.extension;
+						// key:value pairs of extension:username
+						let extensionList = {};
+						extensions.forEach((extension) => {
+							extensionList[extension.user.extension] = extension.user.name;
+						});
+						extensionList1 = "";
+						for (let key in extensionList) {
+							extensionList1 += `${key}: ${extensionList[key]}\n`;
+						}
+						extListChannel.send({
+							content: "",
 							embeds: [{
-								title: "Extension Deleted",
-								description: `${member} (${member.id}) left the server, so their extension (${extension.user.extension}) was deleted`,
-								color: 0xff0000
+								"title": "Extension List",
+								"color": 0x00ff00,
+								"description": `${extensionList1}`
 							}]
 						});
-					}).catch((error) => {
-						console.log(`${colors.red("[ERROR]")} ${error}`);
-					});
-				});
-
-			});
-		});
-	})
-
-	// Run every 5 minutes
-	const extListChannel = dcClient.channels.cache.get(config.discord.extList);
-	// Find the latest message from the bot in extListChannel, if there isn't one, send one. There can be other messages in the channel
-	// Sends the same message as the list command
-	setInterval(async () => {
-		await extListChannel.messages.fetch({
+					})
+				} else {
+					pbxClient.request(funcs.generateQuery("list", {})).then((result) => {
+						let extensions = result.fetchAllExtensions.extension;
+						// key:value pairs of extension:username
+						let extensionList = {};
+						extensions.forEach((extension) => {
+							extensionList[extension.user.extension] = extension.user.name;
+						});
+						extensionList1 = "";
+						for (let key in extensionList) {
+							extensionList1 += `${key}: ${extensionList[key]}\n`;
+						}
+						messages.first().edit({
+							content: "",
+							embeds: [{
+								"title": "Extension List",
+								"color": 0x00ff00,
+								"description": `${extensionList1}`
+							}]
+						});
+					})
+				}
+			})
+		}, 300000);
+		// Also run on startup
+		extListChannel.messages.fetch({
 			limit: 1
 		}).then((messages) => {
 			if (messages.size == 0) {
@@ -347,78 +398,24 @@ dcClient.on('ready', () => {
 				})
 			}
 		})
-	}, 300000);
-	// Also run on startup
-	extListChannel.messages.fetch({
-		limit: 1
-	}).then((messages) => {
-		if (messages.size == 0) {
-			pbxClient.request(funcs.generateQuery("list", {})).then((result) => {
-				let extensions = result.fetchAllExtensions.extension;
-				// key:value pairs of extension:username
-				let extensionList = {};
-				extensions.forEach((extension) => {
-					extensionList[extension.user.extension] = extension.user.name;
-				});
-				extensionList1 = "";
-				for (let key in extensionList) {
-					extensionList1 += `${key}: ${extensionList[key]}\n`;
-				}
-				extListChannel.send({
-					content: "",
-					embeds: [{
-						"title": "Extension List",
-						"color": 0x00ff00,
-						"description": `${extensionList1}`
-					}]
-				});
-			})
-		} else {
-			pbxClient.request(funcs.generateQuery("list", {})).then((result) => {
-				let extensions = result.fetchAllExtensions.extension;
-				// key:value pairs of extension:username
-				let extensionList = {};
-				extensions.forEach((extension) => {
-					extensionList[extension.user.extension] = extension.user.name;
-				});
-				extensionList1 = "";
-				for (let key in extensionList) {
-					extensionList1 += `${key}: ${extensionList[key]}\n`;
-				}
-				messages.first().edit({
-					content: "",
-					embeds: [{
-						"title": "Extension List",
-						"color": 0x00ff00,
-						"description": `${extensionList1}`
-					}]
-				});
-			})
-		}
-	})
+	});
+
 });
 
 dcClient.on("guildMemberRemove", (member) => {
 	// Delete the extension if the user leaves the server
-	console.log(`${colors.cyan("[INFO]")} User ${member.id} left the server`)
+	sendLog(`${colors.cyan("[INFO]")} User ${member.id} left the server`)
 	lookupExtension(member.id, "uid").then((result) => {
 		if (result.status == "exists") {
-			console.log(`${colors.cyan("[INFO]")} User ${member.id} has extension ${result.result.fetchVoiceMail.extension}, deleting it`)
+			sendLog(`${colors.cyan("[INFO]")} User ${member.id} has extension ${result.result.fetchVoiceMail.extension}, deleting it`)
 			deleteExtension(result.result.fetchVoiceMail.extension).then((result) => {
-				console.log(`${colors.cyan("[INFO]")} Deleted extension ${result.result.fetchVoiceMail.extension} because the user left the server`);
-				logChannel.send({
-					embeds: [{
-						title: "Extension Deleted",
-						description: `${member} (${member.id}) left the server, so their extension (${extension.user.extension}) was deleted`,
-						color: 0xff0000
-					}]
-				});
+				sendLog(`${colors.cyan("[INFO]")} Deleted extension ${result.result.fetchVoiceMail.extension} because the user left the server`);
 			}).catch((error) => {
-				console.log(`${colors.red("[ERROR]")} ${error}`);
+				sendLog(`${colors.red("[ERROR]")} ${error}`);
 			});
 		}
 	}).catch((error) => {
-		console.log(`${colors.red("[ERROR]")} ${error}`);
+		sendLog(`${colors.red("[ERROR]")} ${error}`);
 	});
 });
 
@@ -468,13 +465,7 @@ dcClient.on('interactionCreate', async interaction => {
 										]
 									}]
 								})
-								logChannel.send({
-									embeds: [{
-										title: "Extension Created",
-										description: `${interaction.user} (${interaction.user.id}) created extension ${ext}`,
-										color: 0x00ff00
-									}]
-								});
+								sendLog(`${colors.cyan("[INFO]")} Created extension ${ext} for user ${uid}`);
 								// Add the role to the user on Discord based on the ID in the config file
 								let role = interaction.guild.roles.cache.find(role => role.id === config.discord.roleId);
 								interaction.member.roles.add(role);
@@ -516,7 +507,7 @@ dcClient.on('interactionCreate', async interaction => {
 				}
 			}).catch((error) => {
 				// The user doesn't have an extension, create one
-				console.log(`${colors.red("[ERROR]")} ${error}`)
+				sendLog(`${colors.red("[ERROR]")} ${error}`)
 				interaction.editReply({
 					content: "You don't have an extension!",
 					ephemeral: true
@@ -571,13 +562,7 @@ dcClient.on('interactionCreate', async interaction => {
 								content: "Extension Deleted!",
 								ephemeral: true
 							});
-							logChannel.send({
-								embeds: [{
-									title: "Extension Deleted",
-									description: `${member} (${member.id}) chose to delete their extension, ${result.result.fetchExtension.user.extension}`,
-									color: 0xff0000
-								}]
-							});
+							sendLog(`${colors.green("[INFO]")} ${interaction.user.tag} (${interaction.user.id}) deleted extension ${result.result.fetchExtension.user.extension}`)
 							// Remove the role from the user on Discord based on the ID in the config file
 							let role = interaction.guild.roles.cache.find(role => role.id === config.discord.roleId);
 							interaction.member.roles.remove(role);
