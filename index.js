@@ -217,7 +217,7 @@ var sendLog;
 dcClient.on('ready', async () => {
 	await dcClient.channels.fetch(config.discord.logId).then((channel) => {
 		sendLog = (message) => {
-			//channel.send(`\`\`\`ansi\n${message}\`\`\``);
+			channel.send(`\`\`\`ansi\n${message}\`\`\``);
 			console.log(message);
 		};
 
@@ -401,75 +401,6 @@ dcClient.on('ready', async () => {
 
 	});
 
-	// Automatically create extensions for all existing members that don't have one
-	// Temporarily disabled, until I can fix it.
-	// dcClient.guilds.fetch(config.discord.guildId).then((guild) => {
-	// 	console.log(guild.name)
-	// 	let waitR = 0;
-	// 	let waitW = 0;
-	// 	y = guild.members.fetch().then((members) => {
-	// 		clearInterval(x)
-	// 		console.log(members.size)
-	// 		members.forEach((member) => {
-	// 			if (member.user.bot) return;
-	// 			setTimeout(() => {
-	// 				console.log(`Checking ${member.user.tag}`)
-	// 				timeoutA = setTimeout(() => {
-	// 					findNextExtension().then((result) => {
-	// 						let uid = member.user.id;
-	// 						let ext = result.result;
-	// 						let name = member.user.tag;
-	// 						createExtension(ext, name, uid).then((result) => {
-	// 							sendLog(`${colors.cyan("[INFO]")} Created extension ${result.result.createExtension.extension} for ${member.user.tag}`);
-	// 						}).catch((error) => {
-	// 							sendLog(`${colors.red("[ERROR]")} ${member.user.tag} ${error}`);
-	// 						});
-	// 					})
-	// 				}, 10000) // 10 second timeout, assume no extension exists
-	// 				lookupExtension(member.id, "uid").then((result) => {
-	// 					clearTimeout(timeoutA);
-	// 					if (result.status == "exists") {
-	// 						// Extension already exists, do nothing
-	// 					} else {
-	// 						console.log()
-	// 						findNextExtension().then((result) => {
-	// 							let uid = member.user.id;
-	// 							let ext = result.result;
-	// 							let name = member.user.tag;
-	// 							createExtension(ext, name, uid).then((result) => {
-	// 								sendLog(`${colors.cyan("[INFO]")} Created extension ${result.result.createExtension.extension} for ${member.user.tag}`);
-	// 							}).catch((error) => {
-	// 								sendLog(`${colors.red("[ERROR]")} ${member.user.tag} ${error}`);
-	// 							});
-	// 						})
-	// 					}
-	// 				}).catch((error) => {
-	// 					clearTimeout(timeoutA);
-	// 					console.log(error)
-	// 					findNextExtension().then((result) => {
-	// 						let uid = member.user.id;
-	// 						let ext = result.result;
-	// 						let name = member.user.tag;
-	// 						createExtension(ext, name, uid).then((result) => {
-	// 							sendLog(`${colors.cyan("[INFO]")} Created extension ${result.result.createExtension.extension} for ${member.user.tag}`);
-	// 						}).catch((error) => {
-	// 							sendLog(`${colors.red("[ERROR]")} ${member.user.tag} ${error}`);
-	// 						});
-	// 					})
-	// 					console.log(`Creating extension for ${member.user.tag} in ${waitW} seconds`)
-	// 				});
-	// 			}, waitR * 1000)
-	// 			console.log(`Waiting ${waitR} seconds to check ${member.user.tag}`)
-	// 			waitR+=2;
-	// 		});
-	// 	}).catch((error) => {
-	// 		sendLog(`${colors.red("[ERROR]")} ${error}`);
-	// 	});
-	// 	x = setInterval(() => {
-	// 		console.log(y)
-	// 	}, 1000)
-	// });
-
 });
 
 dcClient.on("guildMemberRemove", (member) => {
@@ -651,29 +582,42 @@ dcClient.on('interactionCreate', async interaction => {
 				break;
 			case "button":
 				interaction.channel.send({
-					embeds: [
-						{
-							"title": "Community Phone System",
-							"description": "Click the button below to get your extension!",
-							"color": null
-						}
-					],
-					components: [
-						{
-							type: 1,
-							components: [
-								{
-									type: 2,
-									label: "Get an Extension",
-									emoji: {
-										name: "✅"
-									},
-									style: 3,
-									custom_id: "new"
-								}
-							]
-						}
-					]
+					embeds: [{
+						"title": "Community Phone System Controls",
+						"description": "Use the buttons below to manage your extension.",
+						"color": null
+					}],
+					components: [{
+						type: 1,
+						components: [{
+								type: 2,
+								label: "Get an Extension",
+								emoji: {
+									name: "✅"
+								},
+								style: 3,
+								custom_id: "new"
+							},
+							{
+								type: 2,
+								label: "Get your extension info",
+								emoji: {
+									name: "ℹ️"
+								},
+								style: 1,
+								custom_id: "whoami"
+							},
+							{
+								type: 2,
+								label: "Delete your extension",
+								emoji: {
+									name: "❌"
+								},
+								style: 4,
+								custom_id: "delete"
+							},
+						]
+					}]
 				}).then(() => {
 					interaction.reply({
 						content: "Button sent!",
@@ -737,6 +681,97 @@ dcClient.on('interactionCreate', async interaction => {
 						}
 					}).catch((error) => {
 						interaction.editReply(`Error finding next available extension: ${error}`);
+					});
+				});
+				break;
+			case "delete":
+				interaction.reply({
+					content: "Are you sure you want to delete your extension?\nThis action is **irreversible**!\nAll voicemails, call history, and other data will be **permanently deleted**!\n\n**Only do this if you're absolutely sure you want to delete your extension!**",
+					ephemeral: true,
+					components: [{
+						type: 1,
+						components: [{
+							type: 2,
+							label: "Yes",
+							emoji: {
+								name: "✅"
+							},
+							style: 4,
+							custom_id: "delete2"
+						}]
+					}]
+				}).then(() => {
+					setTimeout(() => {
+						try {
+							interaction.deleteReply();
+						} catch (error) {
+							// ignore
+						}
+					}, 10000);
+				});
+				break;
+			case "delete2":
+				await interaction.deferReply({
+					ephemeral: true
+				});
+				lookupExtension(interaction.user.id, "uid").then((result) => {
+					if (result.status == "exists") {
+						// The user has an extension, delete it
+						deleteExtension(result.result.fetchExtension.user.extension).then((result) => {
+							if (result.status == "deleted") {
+								interaction.editReply({
+									content: "Extension Deleted!",
+									ephemeral: true
+								});
+								sendLog(`${colors.green("[INFO]")} ${interaction.user.tag} (${interaction.user.id}) deleted extension ${result.result.fetchExtension.user.extension}`)
+								// Remove the role from the user on Discord based on the ID in the config file
+								let role = interaction.guild.roles.cache.find(role => role.id === config.discord.roleId);
+								interaction.member.roles.remove(role);
+							}
+						}).catch((error) => {
+							interaction.reply(`Error deleting extension: ${error}`);
+						});
+					}
+				}).catch((error) => {
+					// The user doesn't have an extension, return an ephemeral message saying so
+					interaction.editReply({
+						content: "You don't have an extension!",
+						ephemeral: true
+					});
+				});
+				break;
+			case "whoami":
+				await interaction.deferReply({
+					ephemeral: true
+				});
+				lookupExtension(interaction.user.id, "uid").then((result) => {
+					if (result.status == "exists") {
+						// The user already has an extension, return an ephemeral message saying so
+						interaction.editReply({
+							content: "",
+							embeds: [{
+								"title": "Extension Info",
+								"color": 0x00ff00,
+								"description": `The SIP server is \`${config.freepbx.server}\``,
+								"fields": [{
+										"name": "Extension/Username",
+										"value": result.result.fetchExtension.user.extension
+									},
+									{
+										"name": "Password",
+										"value": `||${result.result.fetchExtension.user.extPassword}||`
+									}
+								]
+							}],
+							ephemeral: true
+						})
+					}
+				}).catch((error) => {
+					// The user doesn't have an extension, create one
+					sendLog(`${colors.red("[ERROR]")} ${error}`)
+					interaction.editReply({
+						content: "You don't have an extension!",
+						ephemeral: true
 					});
 				});
 				break;
