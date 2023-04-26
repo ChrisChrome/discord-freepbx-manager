@@ -267,6 +267,10 @@ dcClient.on('ready', () => {
 		let extensions = result.fetchAllExtensions.extension;
 		extensions.forEach((extension) => {
 			lookupExtension(extension.user.extension, "ext").then((result) => {
+				if(result.result.fetchVoiceMail.email == null) {
+					// Extension is not part of the bot, do nothing
+					return;
+				};
 				// Fetch Discord user using ID stored in result.result.fetchVoiceMail.email, and see if they're in the server
 				dcClient.guilds.cache.get(config.discord.guildId).members.fetch(result.result.fetchVoiceMail.email).then((member) => {
 					// They're in the server, do nothing
