@@ -32,5 +32,11 @@
 		"name": "list",
 		"description": "List all extensions on the LiteNet Phone System",
 		"type": 1
+	},
+	{
+		"name": "button",
+		"description": "Send the get an extension button!",
+		"type": 1,
+		"default_member_permissions": 0
 	}
 ]
