@@ -2,6 +2,7 @@
 const config = require("./config.json");
 const funcs = require("./funcs.js");
 const colors = require("colors");
+const embeds = require("./embeds.json")
 // FreePBX GraphQL Client
 const {
 	FreepbxGqlClient,
@@ -582,11 +583,7 @@ dcClient.on('interactionCreate', async interaction => {
 				break;
 			case "button":
 				interaction.channel.send({
-					embeds: [{
-						"title": "Community Phone System Controls",
-						"description": "Use the buttons below to manage your extension.",
-						"color": null
-					}],
+					embeds: embeds.controls,
 					components: [{
 						type: 1,
 						components: [{
