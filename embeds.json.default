@@ -1,0 +1,9 @@
+{
+	"controls": [
+		{
+			"title": "Phone System Controls",
+			"color": 205442,
+			"description": "Use the buttons below to control your extension!"
+		}
+	]
+}
