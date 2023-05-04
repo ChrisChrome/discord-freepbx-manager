@@ -134,3 +134,4 @@ config.json.old
 config.json.disabled
 
 test.js
+embeds.json
