@@ -214,11 +214,23 @@ const rest = new REST({
 }).setToken(config.discord.token);
 var logChannel;
 var sendLog;
-
+var logMsg = null; // Used to store the log message, so it can be edited instead of sending a new one
+var curMsg = ""; // Used to calculate the length of the log message, so it can be edited instead of sending a new one
 dcClient.on('ready', async () => {
-	await dcClient.channels.fetch(config.discord.logId).then((channel) => {
-		sendLog = (message) => {
-			channel.send(`\`\`\`ansi\n${message}\`\`\``);
+	await dcClient.channels.fetch(config.discord.logId).then(async (channel) => {
+		await channel.send(`\`\`\`ansi\n${curMsg}\`\`\``).then((msg) => {
+			logMsg = msg;
+		});
+		sendLog = async (message) => {
+			if(curMsg.length + message.length < 2000) {
+				curMsg = `${curMsg}\n${message}`;
+				await logMsg.edit(`\`\`\`ansi\n${curMsg}\`\`\``);
+			} else {
+				curMsg = message;
+				await channel.send(`\`\`\`ansi\n${message}\`\`\``).then((msg) => {
+					logMsg = msg;
+				});
+			}
 			console.log(message);
 		};
 
