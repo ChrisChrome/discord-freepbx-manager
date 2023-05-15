@@ -299,7 +299,7 @@ dcClient.on('ready', async () => {
 					}).catch((error) => {
 						// They're not in the server, delete the extension
 						sendLog(`${colors.cyan("[INFO]")} ${extension.user.extension} is not in the server, deleting it`);
-						deleteExtension(extension.result.user.extension).then((result) => {
+						deleteExtension(extension.user.extension).then((result) => {
 							sendLog(`${colors.cyan("[INFO]")} Deleted extension ${extension.user.extension} because the user is no longer in the server`);
 						}).catch((error) => {
 							sendLog(`${colors.red("[ERROR]")} ${error}`);
@@ -421,6 +421,7 @@ dcClient.on("guildMemberRemove", (member) => {
 	sendLog(`${colors.cyan("[INFO]")} User ${member.id} left the server`)
 	lookupExtension(member.id, "uid").then((result) => {
 		if (result.status == "exists") {
+			sendLog(`${colors.magenta("[DEBUG]")} ${JSON.stringify(result)}`)
 			sendLog(`${colors.cyan("[INFO]")} User ${member.id} has extension ${result.result.fetchVoiceMail.extension}, deleting it`)
 			deleteExtension(result.result.fetchVoiceMail.extension).then((result) => {
 				sendLog(`${colors.cyan("[INFO]")} Deleted extension ${result.result.fetchVoiceMail.extension} because the user left the server`);
