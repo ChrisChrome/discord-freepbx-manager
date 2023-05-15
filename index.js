@@ -299,7 +299,7 @@ dcClient.on('ready', async () => {
 					}).catch((error) => {
 						// They're not in the server, delete the extension
 						sendLog(`${colors.cyan("[INFO]")} ${extension.user.extension} is not in the server, deleting it`);
-						deleteExtension(extension.user.extension).then((result) => {
+						deleteExtension(extension.result.user.extension).then((result) => {
 							sendLog(`${colors.cyan("[INFO]")} Deleted extension ${extension.user.extension} because the user is no longer in the server`);
 						}).catch((error) => {
 							sendLog(`${colors.red("[ERROR]")} ${error}`);
