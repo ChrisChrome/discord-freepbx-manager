@@ -169,6 +169,16 @@ const findNextExtension = () => {
 				exts.push(Number(ext.user.extension));
 			});
 			exts.sort((a, b) => a - b);
+			// Find duplicate extensions and remove all but the first
+			for (var i = 0; i < exts.length; i++) {
+				if (exts[i] == exts[i + 1]) {
+					exts.splice(i, 1);
+					i--;
+				}
+			}
+
+
+
 			// Start should be the lowest extension. If none exists use config value
 			// Await if statement
 			var start = 0;
@@ -738,7 +748,7 @@ dcClient.on('interactionCreate', async interaction => {
 								interaction.member.roles.remove(role);
 							}
 						}).catch((error) => {
-							interaction.reply(`Error deleting extension: ${error}`);
+							interaction.editReply(`Error deleting extension: ${error}`);
 						});
 					}
 				}).catch((error) => {
