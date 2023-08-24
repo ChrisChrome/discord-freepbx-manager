@@ -432,7 +432,7 @@ dcClient.on("guildMemberRemove", (member) => {
 	lookupExtension(member.id, "uid").then((result) => {
 		if (result.status == "exists") {
 			sendLog(`${colors.cyan("[INFO]")} User ${member.id} has extension ${result.result.fetchExtension.user.extension}, deleting it`)
-			deleteExtension(result.result.fetchExtension.user.extension).then((result) => {
+			deleteExtension(result.result.fetchExtension.user.extension).then((delResult) => {
 				sendLog(`${colors.cyan("[INFO]")} Deleted extension ${result.result.fetchExtension.user.extension} because the user left the server`);
 			}).catch((error) => {
 				sendLog(`${colors.red("[ERROR]")} ${error}`);
@@ -733,11 +733,13 @@ dcClient.on('interactionCreate', async interaction => {
 				await interaction.deferReply({
 					ephemeral: true
 				});
+				console.log(interaction.user.id)
 				lookupExtension(interaction.user.id, "uid").then((result) => {
 					if (result.status == "exists") {
+						console.log(result.result.fetchExtension);
 						// The user has an extension, delete it
-						deleteExtension(result.result.fetchExtension.user.extension).then((result) => {
-							if (result.status == "deleted") {
+						deleteExtension(result.result.fetchExtension.user.extension).then((delResult) => {
+							if (delResult.status == "deleted") {
 								interaction.editReply({
 									content: "Extension Deleted!",
 									ephemeral: true
@@ -748,6 +750,8 @@ dcClient.on('interactionCreate', async interaction => {
 								interaction.member.roles.remove(role);
 							}
 						}).catch((error) => {
+							// sendLog full error with line number
+							
 							interaction.editReply(`Error deleting extension: ${error}`);
 						});
 					}
