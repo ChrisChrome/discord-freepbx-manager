@@ -742,7 +742,7 @@ dcClient.on('interactionCreate', async interaction => {
 									content: "Extension Deleted!",
 									ephemeral: true
 								});
-								sendLog(`${colors.green("[INFO]")} ${interaction.user.tag} (${interaction.user.id}) deleted extension ${result.result.fetchExtension.user.extension}`)
+								sendLog(`${colors.green("[INFO]")} ${interaction.user.username} (${interaction.user.id}) deleted extension ${result.result.fetchExtension.user.extension}`)
 								// Remove the role from the user on Discord based on the ID in the config file
 								let role = interaction.guild.roles.cache.find(role => role.id === config.discord.roleId);
 								interaction.member.roles.remove(role);
