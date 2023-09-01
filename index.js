@@ -705,7 +705,7 @@ dcClient.on('interactionCreate', async interaction => {
 				});
 				break;
 			case "name": // Update the users extension name, name is optional and defaults to the users Discord displayName
-				// sanity check the name, remove any quotes
+				// sanity check the name, remove any quotes, escape any escape characters
 				let name;
 				if (!interaction.options.get("name")) {
 					name = interaction.user.displayName;
@@ -713,6 +713,7 @@ dcClient.on('interactionCreate', async interaction => {
 					name = interaction.options.get("name").value;
 				}
 				name = name.replace(/"/g, "");
+				name = name.replace(/\\/g, "\\\\"); // Fuck you cayden
 
 				await interaction.deferReply({
 					ephemeral: true
