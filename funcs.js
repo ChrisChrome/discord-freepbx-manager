@@ -77,6 +77,14 @@ module.exports = {
 					}
 				}`;
 				break;
+			case 'update_name':
+				return `mutation {
+					updateCoreUser (input: {extension: ${args.ext}, name: "${args.name}", noanswer_cid: "", busy_cid: "", chanunavail_cid: "", busy_dest: "", noanswer_dest: "", chanunavail_dest: ""}) {
+						coreuser {
+							name
+						}
+					}
+				}`;
 		}
 	}
 }
