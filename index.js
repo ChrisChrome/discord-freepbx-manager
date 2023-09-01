@@ -121,7 +121,7 @@ const updateName = (ext, name) => {
 		});
 	});
 }
-				
+
 
 const lookupExtension = (ident, type) => { // type is either "ext" or "uid"
 	return new Promise((resolve, reject) => {
@@ -262,7 +262,7 @@ dcClient.on('ready', async () => {
 			logMsg = msg;
 		});
 		sendLog = async (message) => {
-			if(curMsg.length + message.length < 2000) {
+			if (curMsg.length + message.length < 2000) {
 				curMsg = `${curMsg}\n${message}`;
 				await logMsg.edit(`\`\`\`ansi\n${curMsg}\`\`\``);
 			} else {
@@ -285,8 +285,8 @@ dcClient.on('ready', async () => {
 				sendLog(`${colors.cyan("[INFO]")} Started refreshing application (/) commands.`);
 				await rest.put(
 					Routes.applicationGuildCommands(dcClient.user.id, config.discord.guildId), {
-						body: commands
-					}
+					body: commands
+				}
 				);
 				sendLog(`${colors.cyan("[INFO]")} Successfully reloaded application (/) commands.`);
 			} catch (error) {
@@ -509,13 +509,13 @@ dcClient.on('interactionCreate', async interaction => {
 											"color": 0x00ff00,
 											"description": `The SIP server is \`${config.freepbx.server}\``,
 											"fields": [{
-													"name": "Extension/Username",
-													"value": ext
-												},
-												{
-													"name": "Password",
-													"value": `||${result.result.fetchExtension.user.extPassword}||`
-												}
+												"name": "Extension/Username",
+												"value": ext
+											},
+											{
+												"name": "Password",
+												"value": `||${result.result.fetchExtension.user.extPassword}||`
+											}
 											]
 										}]
 									})
@@ -547,13 +547,13 @@ dcClient.on('interactionCreate', async interaction => {
 								"color": 0x00ff00,
 								"description": `The SIP server is \`${config.freepbx.server}\``,
 								"fields": [{
-										"name": "Extension/Username",
-										"value": result.result.fetchExtension.user.extension
-									},
-									{
-										"name": "Password",
-										"value": `||${result.result.fetchExtension.user.extPassword}||`
-									}
+									"name": "Extension/Username",
+									"value": result.result.fetchExtension.user.extension
+								},
+								{
+									"name": "Password",
+									"value": `||${result.result.fetchExtension.user.extPassword}||`
+								}
 								]
 							}],
 							ephemeral: true
@@ -639,32 +639,32 @@ dcClient.on('interactionCreate', async interaction => {
 					components: [{
 						type: 1,
 						components: [{
-								type: 2,
-								label: "Get an Extension",
-								emoji: {
-									name: "✅"
-								},
-								style: 3,
-								custom_id: "new"
+							type: 2,
+							label: "Get an Extension",
+							emoji: {
+								name: "✅"
 							},
-							{
-								type: 2,
-								label: "Get your extension info",
-								emoji: {
-									name: "ℹ️"
-								},
-								style: 1,
-								custom_id: "whoami"
+							style: 3,
+							custom_id: "new"
+						},
+						{
+							type: 2,
+							label: "Get your extension info",
+							emoji: {
+								name: "ℹ️"
 							},
-							{
-								type: 2,
-								label: "Delete your extension",
-								emoji: {
-									name: "❌"
-								},
-								style: 4,
-								custom_id: "delete"
+							style: 1,
+							custom_id: "whoami"
+						},
+						{
+							type: 2,
+							label: "Delete your extension",
+							emoji: {
+								name: "❌"
 							},
+							style: 4,
+							custom_id: "delete"
+						},
 						]
 					}]
 				}).then(() => {
@@ -746,13 +746,13 @@ dcClient.on('interactionCreate', async interaction => {
 											"color": 0x00ff00,
 											"description": `The SIP server is \`${config.freepbx.server}\``,
 											"fields": [{
-													"name": "Extension/Username",
-													"value": ext
-												},
-												{
-													"name": "Password",
-													"value": `||${result.result.fetchExtension.user.extPassword}||`
-												}
+												"name": "Extension/Username",
+												"value": ext
+											},
+											{
+												"name": "Password",
+												"value": `||${result.result.fetchExtension.user.extPassword}||`
+											}
 											]
 										}]
 									})
@@ -818,7 +818,7 @@ dcClient.on('interactionCreate', async interaction => {
 							}
 						}).catch((error) => {
 							// sendLog full error with line number
-							
+
 							interaction.editReply(`Error deleting extension: ${error}`);
 						});
 					}
@@ -844,13 +844,13 @@ dcClient.on('interactionCreate', async interaction => {
 								"color": 0x00ff00,
 								"description": `The SIP server is \`${config.freepbx.server}\``,
 								"fields": [{
-										"name": "Extension/Username",
-										"value": result.result.fetchExtension.user.extension
-									},
-									{
-										"name": "Password",
-										"value": `||${result.result.fetchExtension.user.extPassword}||`
-									}
+									"name": "Extension/Username",
+									"value": result.result.fetchExtension.user.extension
+								},
+								{
+									"name": "Password",
+									"value": `||${result.result.fetchExtension.user.extPassword}||`
+								}
 								]
 							}],
 							ephemeral: true
