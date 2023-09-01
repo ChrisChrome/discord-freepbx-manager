@@ -70,6 +70,33 @@ const createExtension = (ext, name, uid) => {
 	});
 }
 
+const fixNames = () => { // Gonna leave this here if I ever need it in the future
+	pbxClient.request(funcs.generateQuery("list", {})).then((result) => {
+		let extensions = result.fetchAllExtensions.extension;
+		extensions.forEach((extension) => {
+			pbxClient.request(funcs.generateQuery("lookup", {
+				ext: extension.user.extension
+			})).then((result) => {
+				// Get discord user
+				dcClient.users.fetch(result.fetchVoiceMail.email).then((user) => {
+					// Update extension name
+					updateName(extension.user.extension, user.displayName).then((result) => {
+						if (result.status == "updated") {
+							sendLog(`${colors.green("[INFO]")} Updated extension ${extension.user.extension} name to ${user.displayName}`)
+						}
+					}).catch((error) => {
+						sendLog(`${colors.red("[ERROR]")} ${error}`);
+					});
+				}).catch((error) => {
+					sendLog(`${colors.red("[ERROR]")} ${error}`);
+				});
+			}).catch((error) => {
+				sendLog(`${colors.red("[ERROR]")} ${error}`);
+			});
+		});
+	});
+}
+
 // deleteExtension, takes an extension number
 const deleteExtension = (ext) => {
 	return new Promise((resolve, reject) => {
@@ -262,7 +289,7 @@ dcClient.on('ready', async () => {
 			logMsg = msg;
 		});
 		sendLog = async (message) => {
-			if (curMsg.length + message.length < 2000) {
+			if (curMsg.length + message.length <= 2000) {
 				curMsg = `${curMsg}\n${message}`;
 				await logMsg.edit(`\`\`\`ansi\n${curMsg}\`\`\``);
 			} else {
@@ -454,6 +481,7 @@ dcClient.on('ready', async () => {
 
 	});
 
+
 });
 
 dcClient.on("guildMemberRemove", (member) => {
@@ -497,7 +525,7 @@ dcClient.on('interactionCreate', async interaction => {
 						if (result.status == "success") {
 							let uid = interaction.user.id;
 							let ext = result.result;
-							let name = interaction.user.globalName;
+							let name = interaction.user.displayName;
 							interaction.editReply(`Creating extension ${ext}...`)
 							// Create the extension
 							createExtension(ext, name, uid).then((result) => {
@@ -616,7 +644,7 @@ dcClient.on('interactionCreate', async interaction => {
 									content: "Extension Deleted!",
 									ephemeral: true
 								});
-								sendLog(`${colors.green("[INFO]")} ${interaction.user.globalName} (${interaction.user.id}) deleted extension ${result.result.fetchExtension.user.extension}`)
+								sendLog(`${colors.green("[INFO]")} ${interaction.user.displayName} (${interaction.user.id}) deleted extension ${result.result.fetchExtension.user.extension}`)
 								// Remove the role from the user on Discord based on the ID in the config file
 								let role = interaction.guild.roles.cache.find(role => role.id === config.discord.roleId);
 								interaction.member.roles.remove(role);
@@ -674,11 +702,11 @@ dcClient.on('interactionCreate', async interaction => {
 					})
 				});
 				break;
-			case "name": // Update the users extension name, name is optional and defaults to the users Discord globalName
+			case "name": // Update the users extension name, name is optional and defaults to the users Discord displayName
 				// sanity check the name, remove any quotes
 				let name;
 				if (!interaction.options.get("name")) {
-					name = interaction.user.globalName;
+					name = interaction.user.displayName;
 				} else {
 					name = interaction.options.get("name").value;
 				}
@@ -696,7 +724,7 @@ dcClient.on('interactionCreate', async interaction => {
 									content: "Extension Name Updated!",
 									ephemeral: true
 								});
-								sendLog(`${colors.green("[INFO]")} ${interaction.user.globalName} (${interaction.user.id}) updated extension ${result.result.fetchExtension.user.extension} name to ${name}`)
+								sendLog(`${colors.green("[INFO]")} ${interaction.user.displayName} (${interaction.user.id}) updated extension ${result.result.fetchExtension.user.extension} name to ${name}`)
 							}
 						}).catch((error) => {
 							interaction.editReply(`Error updating extension name: ${error}`);
@@ -734,7 +762,7 @@ dcClient.on('interactionCreate', async interaction => {
 						if (result.status == "success") {
 							let uid = interaction.user.id;
 							let ext = result.result;
-							let name = interaction.user.globalName;
+							let name = interaction.user.displayName;
 							interaction.editReply(`Creating extension ${ext}...`)
 							// Create the extension
 							createExtension(ext, name, uid).then((result) => {
@@ -811,7 +839,7 @@ dcClient.on('interactionCreate', async interaction => {
 									content: "Extension Deleted!",
 									ephemeral: true
 								});
-								sendLog(`${colors.green("[INFO]")} ${interaction.user.globalName} (${interaction.user.id}) deleted extension ${result.result.fetchExtension.user.extension}`)
+								sendLog(`${colors.green("[INFO]")} ${interaction.user.displayName} (${interaction.user.id}) deleted extension ${result.result.fetchExtension.user.extension}`)
 								// Remove the role from the user on Discord based on the ID in the config file
 								let role = interaction.guild.roles.cache.find(role => role.id === config.discord.roleId);
 								interaction.member.roles.remove(role);
