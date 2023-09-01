@@ -830,10 +830,8 @@ dcClient.on('interactionCreate', async interaction => {
 				await interaction.deferReply({
 					ephemeral: true
 				});
-				console.log(interaction.user.id)
 				lookupExtension(interaction.user.id, "uid").then((result) => {
 					if (result.status == "exists") {
-						console.log(result.result.fetchExtension);
 						// The user has an extension, delete it
 						deleteExtension(result.result.fetchExtension.user.extension).then((delResult) => {
 							if (delResult.status == "deleted") {
