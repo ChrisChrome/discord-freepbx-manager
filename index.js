@@ -289,6 +289,8 @@ dcClient.on('ready', async () => {
 			logMsg = msg;
 		});
 		sendLog = async (message) => {
+			let timestamp = new Date()
+			message = `[${timestamp.toLocaleString()}] ${message}`;
 			if (curMsg.length + message.length <= 2000) {
 				curMsg = `${curMsg}\n${message}`;
 				await logMsg.edit(`\`\`\`ansi\n${curMsg}\`\`\``);
