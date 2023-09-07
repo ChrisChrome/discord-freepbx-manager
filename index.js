@@ -907,7 +907,6 @@ dcClient.on('interactionCreate', async interaction => {
 					});
 				})
 				conn.end();
-				console.log(`Broke db connection, ${conn}`)
 				break;
 			default:
 				break;
