@@ -853,7 +853,9 @@ dcClient.on('interactionCreate', async interaction => {
 												ephemeral: true
 											});
 											sendLog(`${colors.green("[INFO]")} ${interaction.user.displayName} (${interaction.user.id}) added themselves to paging group ${group}`)
-											// Close the connection
+											pbxClient.request(funcs.generateQuery('reload', {
+												id: "UpdatePaging"
+											})
 										}).catch((error) => {
 											interaction.editReply(`Error adding you to the paging group: ${error}`);
 											sendLog(`${colors.red("[ERROR]")} ${error}`);
@@ -887,6 +889,9 @@ dcClient.on('interactionCreate', async interaction => {
 												ephemeral: true
 											});
 											sendLog(`${colors.green("[INFO]")} ${interaction.user.displayName} (${interaction.user.id}) removed themselves from paging group ${group}`)
+											pbxClient.request(funcs.generateQuery('reload', {
+												id: "UpdatePaging"
+											})
 										}).catch((error) => {
 											interaction.editReply(`Error removing you from the paging group: ${error}`);
 											sendLog(`${colors.red("[ERROR]")} ${error}`);
