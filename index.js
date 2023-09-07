@@ -853,9 +853,12 @@ dcClient.on('interactionCreate', async interaction => {
 												ephemeral: true
 											});
 											sendLog(`${colors.green("[INFO]")} ${interaction.user.displayName} (${interaction.user.id}) added themselves to paging group ${group}`)
+											// Close the connection
+											conn.end();
 										}).catch((error) => {
 											interaction.editReply(`Error adding you to the paging group: ${error}`);
 											sendLog(`${colors.red("[ERROR]")} ${error}`);
+											conn.end();
 										});
 									} else {
 										// They're already in the group, return an ephemeral message saying so
@@ -863,10 +866,12 @@ dcClient.on('interactionCreate', async interaction => {
 											content: "You're already in that paging group!",
 											ephemeral: true
 										});
+										conn.end();
 									}
 								}).catch((error) => {
 									interaction.editReply(`Error adding you to the paging group: ${error}`);
 									sendLog(`${colors.red("[ERROR]")} ${error}`);
+									conn.end();
 								});
 								break;
 							case "remove":
@@ -878,6 +883,7 @@ dcClient.on('interactionCreate', async interaction => {
 											content: "You're not in that paging group!",
 											ephemeral: true
 										});
+										conn.end();
 									} else {
 										// They're in the group, remove them
 										conn.query(`DELETE FROM paging_groups WHERE ext = ${ext} AND \`page_number\` = ${group}`).then((result) => {
@@ -886,14 +892,17 @@ dcClient.on('interactionCreate', async interaction => {
 												ephemeral: true
 											});
 											sendLog(`${colors.green("[INFO]")} ${interaction.user.displayName} (${interaction.user.id}) removed themselves from paging group ${group}`)
+											conn.end();
 										}).catch((error) => {
 											interaction.editReply(`Error removing you from the paging group: ${error}`);
 											sendLog(`${colors.red("[ERROR]")} ${error}`);
+											conn.end();
 										});
 									}
 								}).catch((error) => {
 									interaction.editReply(`Error removing you from the paging group: ${error}`);
 									sendLog(`${colors.red("[ERROR]")} ${error}`);
+									conn.end();
 								});
 							break;
 						}
