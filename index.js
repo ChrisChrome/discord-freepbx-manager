@@ -848,14 +848,15 @@ dcClient.on('interactionCreate', async interaction => {
 									if (result.length == 0) {
 										// They're not in the group, add them
 										conn.query(`INSERT INTO paging_groups (\`ext\`, \`page_number\`) VALUES (${ext}, ${group})`).then((result) => {
-											interaction.editReply({
-												content: "Added you to the paging group!",
-												ephemeral: true
-											});
-											sendLog(`${colors.green("[INFO]")} ${interaction.user.displayName} (${interaction.user.id}) added themselves to paging group ${group}`)
 											pbxClient.request(funcs.generateQuery('reload', {
 												id: "UpdatePaging"
-											})
+											})).then(() => {
+												interaction.editReply({
+													content: "Added you to the paging group!",
+													ephemeral: true
+												});
+												sendLog(`${colors.green("[INFO]")} ${interaction.user.displayName} (${interaction.user.id}) added themselves to paging group ${group}`)
+											});
 										}).catch((error) => {
 											interaction.editReply(`Error adding you to the paging group: ${error}`);
 											sendLog(`${colors.red("[ERROR]")} ${error}`);
@@ -884,14 +885,15 @@ dcClient.on('interactionCreate', async interaction => {
 									} else {
 										// They're in the group, remove them
 										conn.query(`DELETE FROM paging_groups WHERE ext = ${ext} AND \`page_number\` = ${group}`).then((result) => {
-											interaction.editReply({
-												content: "Removed you from the paging group!",
-												ephemeral: true
-											});
-											sendLog(`${colors.green("[INFO]")} ${interaction.user.displayName} (${interaction.user.id}) removed themselves from paging group ${group}`)
 											pbxClient.request(funcs.generateQuery('reload', {
 												id: "UpdatePaging"
-											})
+											})).then(() => {
+												interaction.editReply({
+													content: "Removed you from the paging group!",
+													ephemeral: true
+												});
+												sendLog(`${colors.green("[INFO]")} ${interaction.user.displayName} (${interaction.user.id}) removed themselves from paging group ${group}`)
+											});
 										}).catch((error) => {
 											interaction.editReply(`Error removing you from the paging group: ${error}`);
 											sendLog(`${colors.red("[ERROR]")} ${error}`);
