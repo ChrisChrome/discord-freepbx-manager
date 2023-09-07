@@ -267,6 +267,10 @@ const findNextExtension = () => {
 	});
 }
 
+// Set up mariadb connection
+const mariadb = require('mariadb');
+const pool = mariadb.createPool(config.mariadb);
+
 // Load Discord.js
 const Discord = require("discord.js");
 const {
@@ -304,24 +308,108 @@ dcClient.on('ready', async () => {
 		};
 
 		sendLog(`${colors.cyan("[INFO]")} Logged in as ${dcClient.user.displayName}!`);
-
-
-		// Set up application commands
-		const commands = require('./commands.json');
-
-		(async () => {
-			try {
-				sendLog(`${colors.cyan("[INFO]")} Started refreshing application (/) commands.`);
-				await rest.put(
-					Routes.applicationGuildCommands(dcClient.user.id, config.discord.guildId), {
-					body: commands
-				}
-				);
-				sendLog(`${colors.cyan("[INFO]")} Successfully reloaded application (/) commands.`);
-			} catch (error) {
-				console.error(`${colors.red("[ERROR]")} ${error}`);
+		
+		const pageGroups = require('./pageGroups.json');
+		var commands = [
+			{
+				"name": "whoami",
+				"description": "Get your extension info if you have one",
+				"type": 1
+			},
+			{
+				"name": "new",
+				"description": "Get an extension on the LiteNet Phone System",
+				"type": 1
+			},
+			{
+				"name": "delete",
+				"description": "Remove your extension from the LiteNet Phone System",
+				"type": 1,
+				"options": [
+					{
+						"name": "confirm",
+						"description": "Confirm that you want to delete your extension. THIS CANNOT BE UNDONE!",
+						"type": 5,
+						"required": true,
+						"choices": [
+							{
+								"name": "yes",
+								"value": "yes"
+							}
+						]
+					}
+				]
+			},
+			{
+				"name": "list",
+				"description": "List all extensions on the LiteNet Phone System",
+				"type": 1
+			},
+			{
+				"name": "button",
+				"description": "Send the get an extension button!",
+				"type": 1,
+				"default_member_permissions": 0
+			},
+			{
+				"name": "name",
+				"description": "Change your extension's name (Defaults to your Discord name)",
+				"type": 1,
+				"options": [
+					{
+						"name": "name",
+						"description": "The new name for your extension",
+						"type": 3,
+						"required": false
+					}
+				]
+			},
+			{
+				"name": "paging",
+				"description": "Add/Remove yourself from paging groups",
+				"type": 1,
+				"options": [
+					{
+						"name": "method",
+						"description": "The method to use",
+						"type": 3,
+						"required": true,
+						"choices": [
+							{
+								"name": "add",
+								"value": "add"
+							},
+							{
+								"name": "remove",
+								"value": "remove"
+							}
+						]
+					},
+					{
+						"name": "group",
+						"description": "The group to add/remove yourself from",
+						"type": 3,
+						"required": true,
+						"choices": pageGroups
+					}
+				]
 			}
-		})();
+		];
+		
+
+			(async () => {
+				try {
+					sendLog(`${colors.cyan("[INFO]")} Started refreshing application (/) commands.`);
+					await rest.put(
+						Routes.applicationGuildCommands(dcClient.user.id, config.discord.guildId), {
+						body: commands
+					}
+					);
+					sendLog(`${colors.cyan("[INFO]")} Successfully reloaded application (/) commands.`);
+				} catch (error) {
+					console.error(`${colors.red("[ERROR]")} ${error}`);
+				}
+			})();
 
 		// Presence Stuff
 		getExtCount().then((result) => {
@@ -740,6 +828,84 @@ dcClient.on('interactionCreate', async interaction => {
 						ephemeral: true
 					});
 				});
+				break;
+			case "paging": // Add/Remove yourself from paging groups
+				var conn = await pool.getConnection();
+				await interaction.deferReply({
+					ephemeral: true
+				});
+				// Get the users extension, if they don't have one, return an ephemeral message saying so
+				lookupExtension(interaction.user.id, "uid").then((result) => {
+					if (result.status == "exists") {
+						// The user has an extension, add/remove them from the paging group
+						let ext = result.result.fetchExtension.user.extension;
+						let group = interaction.options.get("group").value;
+						let method = interaction.options.get("method").value;
+						switch (method) {
+							case "add":
+								// Check the db if they're already in the group
+								conn.query(`SELECT * FROM paging_groups WHERE ext = ${ext} AND \`page_number\` = ${group}`).then((result) => {
+									if (result.length == 0) {
+										// They're not in the group, add them
+										conn.query(`INSERT INTO paging_groups (\`ext\`, \`page_number\`) VALUES (${ext}, ${group})`).then((result) => {
+											interaction.editReply({
+												content: "Added you to the paging group!",
+												ephemeral: true
+											});
+											sendLog(`${colors.green("[INFO]")} ${interaction.user.displayName} (${interaction.user.id}) added themselves to paging group ${group}`)
+										}).catch((error) => {
+											interaction.editReply(`Error adding you to the paging group: ${error}`);
+											sendLog(`${colors.red("[ERROR]")} ${error}`);
+										});
+									} else {
+										// They're already in the group, return an ephemeral message saying so
+										interaction.editReply({
+											content: "You're already in that paging group!",
+											ephemeral: true
+										});
+									}
+								}).catch((error) => {
+									interaction.editReply(`Error adding you to the paging group: ${error}`);
+									sendLog(`${colors.red("[ERROR]")} ${error}`);
+								});
+								break;
+							case "remove":
+								// Check if they're in the group
+								conn.query(`SELECT * FROM paging_groups WHERE ext = ${ext} AND \`page_number\` = ${group}`).then((result) => {
+									if (result.length == 0) {
+										// They're not in the group, return an ephemeral message saying so
+										interaction.editReply({
+											content: "You're not in that paging group!",
+											ephemeral: true
+										});
+									} else {
+										// They're in the group, remove them
+										conn.query(`DELETE FROM paging_groups WHERE ext = ${ext} AND \`page_number\` = ${group}`).then((result) => {
+											interaction.editReply({
+												content: "Removed you from the paging group!",
+												ephemeral: true
+											});
+											sendLog(`${colors.green("[INFO]")} ${interaction.user.displayName} (${interaction.user.id}) removed themselves from paging group ${group}`)
+										}).catch((error) => {
+											interaction.editReply(`Error removing you from the paging group: ${error}`);
+											sendLog(`${colors.red("[ERROR]")} ${error}`);
+										});
+									}
+								}).catch((error) => {
+									interaction.editReply(`Error removing you from the paging group: ${error}`);
+									sendLog(`${colors.red("[ERROR]")} ${error}`);
+								});
+							break;
+						}
+					}
+				}).catch((error) => {
+					// The user doesn't have an extension, return an ephemeral message saying so, and how to get one (/new)
+					interaction.editReply({
+						content: "You don't have an extension! Run `/new` to get one!",
+						ephemeral: true
+					});
+				})
+
 				break;
 			default:
 				break;
