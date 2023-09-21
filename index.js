@@ -485,7 +485,7 @@ dcClient.on('ready', async () => {
 						});
 						extensionList1 = "";
 						for (let key in extensionList) {
-							extensionList1 += `${key}: ${extensionList[key]}\n`;
+							extensionList1 += `\`${key}\`: ${extensionList[key]}\n`;
 						}
 						extListChannel.send({
 							content: "",
@@ -511,7 +511,7 @@ dcClient.on('ready', async () => {
 						});
 						extensionList1 = "";
 						for (let key in extensionList) {
-							extensionList1 += `${key}: ${extensionList[key]}\n`;
+							extensionList1 += `\`${key}\`: ${extensionList[key]}\n`;
 						}
 						messages.first().edit({
 							content: "",
@@ -544,7 +544,7 @@ dcClient.on('ready', async () => {
 					});
 					extensionList1 = "";
 					for (let key in extensionList) {
-						extensionList1 += `${key}: ${extensionList[key]}\n`;
+						extensionList1 += `\`${key}\`: ${extensionList[key]}\n`;
 					}
 					extListChannel.send({
 						content: "",
@@ -570,7 +570,7 @@ dcClient.on('ready', async () => {
 					});
 					extensionList1 = "";
 					for (let key in extensionList) {
-						extensionList1 += `${key}: ${extensionList[key]}\n`;
+						extensionList1 += `\`${key}\`: ${extensionList[key]}\n`;
 					}
 					messages.first().edit({
 						content: "",
@@ -720,7 +720,7 @@ dcClient.on('interactionCreate', async interaction => {
 					});
 					extensionList1 = "";
 					for (let key in extensionList) {
-						extensionList1 += `${key}: ${extensionList[key]}\n`;
+						extensionList1 += `\`${key}\`: ${extensionList[key]}\n`;
 					}
 					interaction.editReply({
 						content: "",
