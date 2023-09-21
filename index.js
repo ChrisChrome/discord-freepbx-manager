@@ -308,7 +308,7 @@ dcClient.on('ready', async () => {
 		};
 
 		sendLog(`${colors.cyan("[INFO]")} Logged in as ${dcClient.user.displayName}!`);
-		
+
 		const pageGroups = require('./pageGroups.json');
 		var commands = [
 			{
@@ -393,23 +393,37 @@ dcClient.on('ready', async () => {
 						"choices": pageGroups
 					}
 				]
+			},
+			{
+				"name": "Lookup Extension",
+				"type": 2,
+			},
+			{
+				"name": "Create Extension",
+				"type": 2,
+				"default_member_permissions": 0
+			},
+			{
+				"name": "Delete Extension",
+				"type": 2,
+				"default_member_permissions": 0
 			}
 		];
-		
 
-			(async () => {
-				try {
-					sendLog(`${colors.cyan("[INFO]")} Started refreshing application (/) commands.`);
-					await rest.put(
-						Routes.applicationGuildCommands(dcClient.user.id, config.discord.guildId), {
-						body: commands
-					}
-					);
-					sendLog(`${colors.cyan("[INFO]")} Successfully reloaded application (/) commands.`);
-				} catch (error) {
-					console.error(`${colors.red("[ERROR]")} ${error}`);
+
+		(async () => {
+			try {
+				sendLog(`${colors.cyan("[INFO]")} Started refreshing application (/) commands.`);
+				await rest.put(
+					Routes.applicationGuildCommands(dcClient.user.id, config.discord.guildId), {
+					body: commands
 				}
-			})();
+				);
+				sendLog(`${colors.cyan("[INFO]")} Successfully reloaded application (/) commands.`);
+			} catch (error) {
+				console.error(`${colors.red("[ERROR]")} ${error}`);
+			}
+		})();
 
 		// Presence Stuff
 		getExtCount().then((result) => {
@@ -928,7 +942,7 @@ dcClient.on('interactionCreate', async interaction => {
 									interaction.editReply(`Error removing you from the paging group: ${error}`);
 									sendLog(`${colors.red("[ERROR]")} ${error}`);
 								});
-							break;
+								break;
 						}
 					}
 				}).catch((error) => {
@@ -1089,6 +1103,131 @@ dcClient.on('interactionCreate', async interaction => {
 					sendLog(`${colors.red("[ERROR]")} ${error}`)
 					interaction.editReply({
 						content: "You don't have an extension!",
+						ephemeral: true
+					});
+				});
+				break;
+		}
+	}
+	if (interaction.isUserContextMenuCommand()) {
+		switch (interaction.commandName) {
+			case "Lookup Extension":
+				// Get the extension for the user if they have one
+				await interaction.deferReply({
+					ephemeral: true
+				});
+				lookupExtension(interaction.targetId, "uid").then((result) => {
+					if (result.status == "exists") {
+						// The user already has an extension, return an ephemeral message saying so
+						interaction.editReply({
+							content: `${interaction.targetUser} has extension \`${result.result.fetchExtension.user.extension}\``,
+							ephemeral: true
+						})
+					}
+				}).catch((error) => {
+					// The user doesn't have an extension, create one
+					sendLog(`${colors.red("[ERROR]")} ${error}`)
+					interaction.editReply({
+						content: "That user doesn't have an extension!",
+						ephemeral: true
+					});
+				});
+				break;
+			case "Create Extension": // Create an extension for the user, if they have one, return the extension info
+				await interaction.deferReply({
+					ephemeral: true
+				});
+				lookupExtension(interaction.targetId, "uid").then((result) => {
+					if (result.status == "exists") {
+						// The user already has an extension, return an ephemeral message saying so
+						interaction.editReply({
+							content: "",
+							embeds: [{
+								"title": "Extension Info",
+								"color": 0x00ff00,
+								"description": `The SIP server is \`${config.freepbx.server}\``,
+								"fields": [{
+									"name": "Extension/Username",
+									"value": result.result.fetchExtension.user.extension
+								},
+								{
+									"name": "Password",
+									"value": `||${result.result.fetchExtension.user.extPassword}||`
+								}
+								]
+							}]
+						});
+					}
+				}).catch((error) => {
+					// The user doesn't have an extension, create one
+					findNextExtension().then((result) => {
+						if (result.status == "success") {
+							let uid = interaction.targetId;
+							let ext = result.result;
+							let name = interaction.targetUser.displayName;
+							interaction.editReply(`Creating extension ${ext}...`)
+							// Create the extension
+							createExtension(ext, name, uid).then((result) => {
+								if (result.status == "created") {
+									interaction.editReply({
+										content: "",
+										embeds: [{
+											"title": "Extension Created!",
+											"color": 0x00ff00,
+											"description": `The SIP server is \`${config.freepbx.server}\``,
+											"fields": [{
+												"name": "Extension/Username",
+												"value": ext
+											},
+											{
+												"name": "Password",
+												"value": `||${result.result.fetchExtension.user.extPassword}||`
+											}
+											]
+										}]
+									})
+									sendLog(`${colors.cyan("[INFO]")} Admin ${interaction.user.displayName} Created extension ${ext} for user ${interaction.targetUser.displayName} (${interaction.targetId})`);
+									// Add the role to the user on Discord based on the ID in the config file
+									let role = interaction.guild.roles.cache.find(role => role.id === config.discord.roleId);
+									interaction.targetMember.roles.add(role);
+								}
+							}).catch((error) => {
+								interaction.editReply(`Error creating extension: ${error}`);
+							});
+						}
+					}).catch((error) => {
+						interaction.editReply(`Error finding next available extension: ${error}`);
+					});
+				});
+				break;
+			case "Delete Extension": // Delete the users extension, if they have one
+				await interaction.deferReply({
+					ephemeral: true
+				});
+				lookupExtension(interaction.targetId, "uid").then((result) => {
+					if (result.status == "exists") {
+						// The user has an extension, delete it
+						deleteExtension(result.result.fetchExtension.user.extension).then((delResult) => {
+							if (delResult.status == "deleted") {
+								interaction.editReply({
+									content: "Extension Deleted!",
+									ephemeral: true
+								});
+								sendLog(`${colors.green("[INFO]")} ${interaction.user.displayName} deleted ${interaction.targetUser.username}'s extension ${result.result.fetchExtension.user.extension}`)
+								// Remove the role from the user on Discord based on the ID in the config file
+								let role = interaction.guild.roles.cache.find(role => role.id === config.discord.roleId);
+								interaction.targetMember.roles.remove(role);
+							}
+						}).catch((error) => {
+							// sendLog full error with line number
+
+							interaction.editReply(`Error deleting extension: ${error}`);
+						});
+					}
+				}).catch((error) => {
+					// The user doesn't have an extension, return an ephemeral message saying so
+					interaction.editReply({
+						content: "That user doesn't have an extension!",
 						ephemeral: true
 					});
 				});
