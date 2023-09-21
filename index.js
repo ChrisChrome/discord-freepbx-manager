@@ -492,7 +492,12 @@ dcClient.on('ready', async () => {
 							embeds: [{
 								"title": "Extension List",
 								"color": 0x00ff00,
-								"description": `${extensionList1}`
+								// Get the number of extensions
+								"description": `${extensions.length} extensions`,
+								"fields": [{
+									"name": "Extensions",
+									"value": `${extensionList1}`
+								}]
 							}]
 						});
 					})
