@@ -179,7 +179,7 @@ const generateExtensionListEmbed = async () => {
             `);
 
 			console.log(`2.1 query end ${rows.length}`)
-
+			console.log(JSON.stringify(rows, null, 2))
 			// Add extensions that weren't in the results to the inactive array
 			rows.forEach(row => {
 				console.log("2.2 foreach start")
