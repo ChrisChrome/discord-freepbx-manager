@@ -159,17 +159,13 @@ const generateExtensionListEmbed = async () => {
 		try {
 			var conn = await cdrPool.getConnection();
 			const result = await pbxClient.request(funcs.generateQuery("list", {}));
-
-			console.log("1debug start get extensions")
 			let extensions = result.fetchAllExtensions.extension;
 			let extensionList = {};
-			let inactive = [];
 
 			// Generate a list of all unique extensions to be checked in the database
 			let uniqueExtensions = [...new Set(extensions.map(extension => extension.user.extension))];
 
 			// Construct SQL query to check all unique extensions at the same time
-			console.log("2 debug start SQL query")
 			const rows = await conn.query(`
 			SELECT cid_num, MAX(eventtime) 
 			FROM cel 
@@ -177,30 +173,17 @@ const generateExtensionListEmbed = async () => {
 			AND eventtime >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
 			GROUP BY cid_num
             `);
+			// turn rows into an array of extension numbers
+			let active = rows.map(row => row.cid_num);
 
-			console.log(`2.1 query end ${rows.length}`)
-			console.log(JSON.stringify(rows, null, 2))
-			// Add extensions that weren't in the results to the inactive array
-			rows.forEach(row => {
-				console.log(`2.2 ${row.cid_num} ${uniqueExtensions.includes(row.cid_num)}`)
-				if (!uniqueExtensions.includes(row.cid_num)) {
-					console.log(`2.3 pushing ${row.cid_num}`)
-					inactive.push(row.cid_num);
-				}
-			});
-
-			console.log("3 debug start foreach")
 			extensions.forEach((extension) => {
-				console.log("3.1 foreach start")
 				extensionList[extension.user.extension] = extension.user.name;
 			});
 
 			let extensionList1 = "";
 
-			console.log("4 debug start for")
 			for (let key in extensionList) {
-				console.log("4.1 for start")
-				extensionList1 += `\`${inactive.includes(key) ? "*" : ""}${key}\`: ${extensionList[key]}\n`;
+				extensionList1 += `\`${active.includes(key) ? "" : "*"}${key}\`: ${extensionList[key]}\n`;
 			}
 			res = {
 				"title": "Extension List",
