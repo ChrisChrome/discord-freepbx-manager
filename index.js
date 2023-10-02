@@ -158,23 +158,33 @@ const generateExtensionListEmbed = async () => {
 	return new Promise(async (resolve, reject) => {
 		var conn = await cdrPool.getConnection();
 		pbxClient.request(funcs.generateQuery("list", {})).then((result) => {
+			console.log("1debug start get extensions")
 			let extensions = result.fetchAllExtensions.extension;
 			// key:value pairs of extension:username
 			let extensionList = {};
 			let inactive = [];
+			console.log("2 debug start foreach")
 			extensions.forEach((extension) => {
+				console.log("2.1 foreach start")
 				extensionList[extension.user.extension] = extension.user.name;
+				console.log("2.2 query start")
 				conn.query(`SELECT * FROM cel WHERE cid_num  = ${extension.user.extension} AND eventtime >= DATE_SUB(CURDATE(), INTERVAL 30 DAY);`)
 					.then((rows) => {
+						console.log(`2.3 query end ${rows.length}`)
 						if (rows.length == 0) {
+
 							inactive.push(extension.user.extension);
 						}
 					}).catch((error) => {
+						console.log("2.4 query error")
 						reject(error);
 					});
+				console.log("2.5 foreach end")
 			});
 			extensionList1 = "";
+			console.log("3 debug start for")
 			for (let key in extensionList) {
+				console.log("3.1 for start")
 				extensionList1 += `\`${inactive[key] ? "*" : ""}${key}\`: ${extensionList[key]}\n`;
 			}
 			res = {
