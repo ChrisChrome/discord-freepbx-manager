@@ -156,8 +156,10 @@ const cdrPool = mariadb.createPool(config.cdrdb);
 
 const generateExtensionListEmbed = async () => {
     return new Promise(async (resolve, reject) => {
-        var conn = await cdrPool.getConnection();
-        pbxClient.request(funcs.generateQuery("list", {})).then((result) => {
+        try {
+            var conn = await cdrPool.getConnection();
+            const result = await pbxClient.request(funcs.generateQuery("list", {}));
+            
             console.log("1debug start get extensions")
             let extensions = result.fetchAllExtensions.extension;
             let extensionList = {};
@@ -168,25 +170,20 @@ const generateExtensionListEmbed = async () => {
 
             // Construct SQL query to check all unique extensions at the same time
             console.log("2 debug start SQL query")
-            conn.query(`
+            const rows = await conn.query(`
                 SELECT cid_num 
                 FROM cel 
                 WHERE cid_num IN (${uniqueExtensions.join(",")}) 
                 AND eventtime >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-            `)
-            .then((rows) => {
-                console.log(`2.1 query end ${rows.length}`)
+            `);
 
-                // Add extensions that weren't in the results to the inactive array
-                rows.forEach(row => {
-                    if (!uniqueExtensions.includes(row.cid_num)) {
-                        inactive.push(row.cid_num);
-                    }
-                });
+            console.log(`2.1 query end ${rows.length}`)
 
-            }).catch((error) => {
-                console.log("2.2 query error")
-                reject(error);
+            // Add extensions that weren't in the results to the inactive array
+            rows.forEach(row => {
+                if (!uniqueExtensions.includes(row.cid_num)) {
+                    inactive.push(row.cid_num);
+                }
             });
 
             console.log("3 debug start foreach")
@@ -212,11 +209,12 @@ const generateExtensionListEmbed = async () => {
                 }]
             }
             resolve(res);
-        }).catch((error) => {
+        } catch (error) {
             reject(error);
-        });
-        conn.end();
-    })
+        } finally {
+            conn.end();
+        }
+    });
 };
 
 const lookupExtension = (ident, type) => { // type is either "ext" or "uid"
