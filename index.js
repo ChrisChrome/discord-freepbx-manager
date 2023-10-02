@@ -149,6 +149,51 @@ const updateName = (ext, name) => {
 	});
 }
 
+// Set up mariadb connection
+const mariadb = require('mariadb');
+const pool = mariadb.createPool(config.mariadb);
+const cdrPool = mariadb.createPool(config.cdrdb);
+
+const generateExtensionListEmbed = async () => {
+	return new Promise(async (resolve, reject) => {
+		var conn = await cdrPool.getConnection();
+		pbxClient.request(funcs.generateQuery("list", {})).then((result) => {
+			let extensions = result.fetchAllExtensions.extension;
+			// key:value pairs of extension:username
+			let extensionList = {};
+			let inactive = [];
+			extensions.forEach((extension) => {
+				extensionList[extension.user.extension] = extension.user.name;
+				conn.query(`SELECT * FROM cel WHERE cid_num  = ${extension.user.extension} AND eventtime >= DATE_SUB(CURDATE(), INTERVAL 30 DAY);`)
+					.then((rows) => {
+						if (rows.length == 0) {
+							inactive.push(extension.user.extension);
+						}
+					}).catch((error) => {
+						reject(error);
+					});
+			});
+			extensionList1 = "";
+			for (let key in extensionList) {
+				extensionList1 += `\`${inactive[key] ? "*" : ""}${key}\`: ${extensionList[key]}\n`;
+			}
+			res = {
+				"title": "Extension List",
+				"color": 0x00ff00,
+				// Get the number of extensions
+				"description": `${extensions.length} extensions`,
+				"fields": [{
+					"name": "Extensions",
+					"value": `${extensionList1}`
+				}]
+			}
+			resolve(res);
+		}).catch((error) => {
+			reject(error);
+		});
+		conn.end();
+	})
+};
 
 const lookupExtension = (ident, type) => { // type is either "ext" or "uid"
 	return new Promise((resolve, reject) => {
@@ -266,10 +311,6 @@ const findNextExtension = () => {
 		});
 	});
 }
-
-// Set up mariadb connection
-const mariadb = require('mariadb');
-const pool = mariadb.createPool(config.mariadb);
 
 // Load Discord.js
 const Discord = require("discord.js");
@@ -501,19 +542,12 @@ dcClient.on('ready', async () => {
 						for (let key in extensionList) {
 							extensionList1 += `\`${key}\`: ${extensionList[key]}\n`;
 						}
-						extListChannel.send({
-							content: "",
-							embeds: [{
-								"title": "Extension List",
-								"color": 0x00ff00,
-								// Get the number of extensions
-								"description": `${extensions.length} extensions`,
-								"fields": [{
-									"name": "Extensions",
-									"value": `${extensionList1}`
-								}]
-							}]
-						});
+						generateExtensionListEmbed().then(embed => {
+							extListChannel.send({
+								content: "",
+								embeds: [embed]
+							});
+						})
 					})
 				} else {
 					pbxClient.request(funcs.generateQuery("list", {})).then((result) => {
@@ -527,18 +561,11 @@ dcClient.on('ready', async () => {
 						for (let key in extensionList) {
 							extensionList1 += `\`${key}\`: ${extensionList[key]}\n`;
 						}
-						messages.first().edit({
-							content: "",
-							embeds: [{
-								"title": "Extension List",
-								"color": 0x00ff00,
-								// Get the number of extensions
-								"description": `${extensions.length} extensions`,
-								"fields": [{
-									"name": "Extensions",
-									"value": `${extensionList1}`
-								}]
-							}]
+						generateExtensionListEmbed().then(embed => {
+							messages.first().edit({
+								content: "",
+								embeds: [embed]
+							});
 						});
 					})
 				}
@@ -560,18 +587,11 @@ dcClient.on('ready', async () => {
 					for (let key in extensionList) {
 						extensionList1 += `\`${key}\`: ${extensionList[key]}\n`;
 					}
-					extListChannel.send({
-						content: "",
-						embeds: [{
-							"title": "Extension List",
-							"color": 0x00ff00,
-							// Get the number of extensions
-							"description": `${extensions.length} extensions`,
-							"fields": [{
-								"name": "Extensions",
-								"value": `${extensionList1}`
-							}]
-						}]
+					generateExtensionListEmbed().then(embed => {
+						extListChannel.send({
+							content: "",
+							embeds: [embed]
+						});
 					});
 				})
 			} else {
@@ -586,18 +606,11 @@ dcClient.on('ready', async () => {
 					for (let key in extensionList) {
 						extensionList1 += `\`${key}\`: ${extensionList[key]}\n`;
 					}
-					messages.first().edit({
-						content: "",
-						embeds: [{
-							"title": "Extension List",
-							"color": 0x00ff00,
-							// Get the number of extensions
-							"description": `${extensions.length} extensions`,
-							"fields": [{
-								"name": "Extensions",
-								"value": `${extensionList1}`
-							}]
-						}]
+					generateExtensionListEmbed().then(embed => {
+						messages.first().edit({
+							content: "",
+							embeds: [embed]
+						});
 					});
 				})
 			}
@@ -725,32 +738,13 @@ dcClient.on('interactionCreate', async interaction => {
 				await interaction.deferReply({
 					ephemeral: false
 				});
-				pbxClient.request(funcs.generateQuery("list", {})).then((result) => {
-					let extensions = result.fetchAllExtensions.extension;
-					// key:value pairs of extension:username
-					let extensionList = {};
-					extensions.forEach((extension) => {
-						extensionList[extension.user.extension] = extension.user.name;
-					});
-					extensionList1 = "";
-					for (let key in extensionList) {
-						extensionList1 += `\`${key}\`: ${extensionList[key]}\n`;
-					}
+				generateExtensionListEmbed().then((result) => {
 					interaction.editReply({
 						content: "",
-						embeds: [{
-							"title": "Extension List",
-							"color": 0x00ff00,
-							// Get the number of extensions
-							"description": `${extensions.length} extensions`,
-							"fields": [{
-								"name": "Extensions",
-								"value": `${extensionList1}`
-							}]
-						}]
+						embeds: [result]
 					});
 				}).catch((error) => {
-					interaction.editReply(`Error listing extensions: ${error}`);
+					interaction.editReply(`Error generating extension list: ${error}`);
 				});
 				break;
 			case "delete":
