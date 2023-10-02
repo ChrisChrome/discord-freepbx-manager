@@ -181,7 +181,9 @@ const generateExtensionListEmbed = async () => {
 
             // Add extensions that weren't in the results to the inactive array
             rows.forEach(row => {
+				console.log("2.2 foreach start")
                 if (!uniqueExtensions.includes(row.cid_num)) {
+					console.log(`2.3 pushing ${row.cid_num}`)
                     inactive.push(row.cid_num);
                 }
             });
