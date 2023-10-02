@@ -155,54 +155,68 @@ const pool = mariadb.createPool(config.mariadb);
 const cdrPool = mariadb.createPool(config.cdrdb);
 
 const generateExtensionListEmbed = async () => {
-	return new Promise(async (resolve, reject) => {
-		var conn = await cdrPool.getConnection();
-		pbxClient.request(funcs.generateQuery("list", {})).then((result) => {
-			console.log("1debug start get extensions")
-			let extensions = result.fetchAllExtensions.extension;
-			// key:value pairs of extension:username
-			let extensionList = {};
-			let inactive = [];
-			console.log("2 debug start foreach")
-			extensions.forEach((extension) => {
-				console.log("2.1 foreach start")
-				extensionList[extension.user.extension] = extension.user.name;
-				console.log("2.2 query start")
-				conn.query(`SELECT * FROM cel WHERE cid_num  = ${extension.user.extension} AND eventtime >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) LIMIT 1;`)
-					.then((rows) => {
-						console.log(`2.3 query end ${rows.length}`)
-						if (rows.length == 0) {
+    return new Promise(async (resolve, reject) => {
+        var conn = await cdrPool.getConnection();
+        pbxClient.request(funcs.generateQuery("list", {})).then((result) => {
+            console.log("1debug start get extensions")
+            let extensions = result.fetchAllExtensions.extension;
+            let extensionList = {};
+            let inactive = [];
 
-							inactive.push(extension.user.extension);
-						}
-					}).catch((error) => {
-						console.log("2.4 query error")
-						reject(error);
-					});
-				console.log("2.5 foreach end")
-			});
-			extensionList1 = "";
-			console.log("3 debug start for")
-			for (let key in extensionList) {
-				console.log("3.1 for start")
-				extensionList1 += `\`${inactive[key] ? "*" : ""}${key}\`: ${extensionList[key]}\n`;
-			}
-			res = {
-				"title": "Extension List",
-				"color": 0x00ff00,
-				// Get the number of extensions
-				"description": `${extensions.length} extensions`,
-				"fields": [{
-					"name": "Extensions",
-					"value": `${extensionList1}`
-				}]
-			}
-			resolve(res);
-		}).catch((error) => {
-			reject(error);
-		});
-		conn.end();
-	})
+            // Generate a list of all unique extensions to be checked in the database
+            let uniqueExtensions = [...new Set(extensions.map(extension => extension.user.extension))];
+
+            // Construct SQL query to check all unique extensions at the same time
+            console.log("2 debug start SQL query")
+            conn.query(`
+                SELECT cid_num 
+                FROM cel 
+                WHERE cid_num IN (${uniqueExtensions.join(",")}) 
+                AND eventtime >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+            `)
+            .then((rows) => {
+                console.log(`2.1 query end ${rows.length}`)
+
+                // Add extensions that weren't in the results to the inactive array
+                rows.forEach(row => {
+                    if (!uniqueExtensions.includes(row.cid_num)) {
+                        inactive.push(row.cid_num);
+                    }
+                });
+
+            }).catch((error) => {
+                console.log("2.2 query error")
+                reject(error);
+            });
+
+            console.log("3 debug start foreach")
+            extensions.forEach((extension) => {
+                console.log("3.1 foreach start")
+                extensionList[extension.user.extension] = extension.user.name;
+            });
+
+            let extensionList1 = "";
+            
+            console.log("4 debug start for")
+            for (let key in extensionList) {
+                console.log("4.1 for start")
+                extensionList1 += `\`${inactive.includes(key) ? "*" : ""}${key}\`: ${extensionList[key]}\n`;
+            }
+            res = {
+                "title": "Extension List",
+                "color": 0x00ff00,
+                "description": `${extensions.length} extensions`,
+                "fields": [{
+                    "name": "Extensions",
+                    "value": `${extensionList1}`
+                }]
+            }
+            resolve(res);
+        }).catch((error) => {
+            reject(error);
+        });
+        conn.end();
+    })
 };
 
 const lookupExtension = (ident, type) => { // type is either "ext" or "uid"
