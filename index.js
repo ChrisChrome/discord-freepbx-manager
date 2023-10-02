@@ -183,7 +183,7 @@ const generateExtensionListEmbed = async () => {
 			let extensionList1 = "";
 
 			for (let key in extensionList) {
-				extensionList1 += `\`${active.includes(key) ? "" : "*"}${key}\`: ${extensionList[key]}\n`;
+				extensionList1 += `\`${key}${active.includes(key) ? "" : "*"}\`: ${extensionList[key]}\n`;
 			}
 			res = {
 				"title": "Extension List",
