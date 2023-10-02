@@ -168,7 +168,7 @@ const generateExtensionListEmbed = async () => {
 				console.log("2.1 foreach start")
 				extensionList[extension.user.extension] = extension.user.name;
 				console.log("2.2 query start")
-				conn.query(`SELECT * FROM cel WHERE cid_num  = ${extension.user.extension} AND eventtime >= DATE_SUB(CURDATE(), INTERVAL 30 DAY);`)
+				conn.query(`SELECT * FROM cel WHERE cid_num  = ${extension.user.extension} AND eventtime >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) LIMIT 1;`)
 					.then((rows) => {
 						console.log(`2.3 query end ${rows.length}`)
 						if (rows.length == 0) {
