@@ -188,7 +188,7 @@ const generateExtensionListEmbed = async () => {
 			res = {
 				"title": "Extension List",
 				"color": 0x00ff00,
-				"description": `${extensions.length} extensions`,
+				"description": `${extensions.length} extensions\n\`* = inactive\``,
 				"fields": [{
 					"name": "Extensions",
 					"value": `${extensionList1}`
