@@ -166,29 +166,50 @@ const generateExtensionListEmbed = async () => {
 			let uniqueExtensions = [...new Set(extensions.map(extension => extension.user.extension))];
 
 			// Construct SQL query to check all unique extensions at the same time
-			const rows = await conn.query(`
+			const row30 = await conn.query(`
 			SELECT cid_num, MAX(eventtime) 
 			FROM cel 
 			WHERE cid_num IN (${uniqueExtensions.join(",")}) 
 			AND eventtime >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
 			GROUP BY cid_num
             `);
+			const row90 = await conn.query(`
+			SELECT cid_num, MAX(eventtime) 
+			FROM cel 
+			WHERE cid_num IN (${uniqueExtensions.join(",")}) 
+			AND eventtime >= DATE_SUB(CURDATE(), INTERVAL 90 DAY)
+			GROUP BY cid_num
+            `);
 			// turn rows into an array of extension numbers
-			let active = rows.map(row => row.cid_num);
+			let active30 = row30.map(row => row.cid_num);
+			let active90 = row90.map(row => row.cid_num);
+
+			// Generate inactiveFlag object
+			let inactiveFlag = {};
+			uniqueExtensions.forEach((ext) => {
+				if (active30.includes(ext)) {
+					inactiveFlag[ext] = "";
+				} else if (active90.includes(ext)) {
+					inactiveFlag[ext] = "*";
+				} else {
+					inactiveFlag[ext] = "**";
+				}
+			});
 
 			extensions.forEach((extension) => {
 				extensionList[extension.user.extension] = extension.user.name;
 			});
+		
 
 			let extensionList1 = "";
 
 			for (let key in extensionList) {
-				extensionList1 += `\`${key}${active.includes(key) ? "" : "*"}\`: ${extensionList[key]}\n`;
+				extensionList1 += `\`${key}${inactiveFlag[key]}\`: ${extensionList[key]}\n`;
 			}
 			res = {
 				"title": "Extension List",
 				"color": 0x00ff00,
-				"description": `${extensions.length} extensions\n\`* = inactive\``,
+				"description": `${extensions.length} extensions\n\`* = inactive for 30 days\`\n\`** = inactive for 90 days\``,
 				"fields": [{
 					"name": "Extensions",
 					"value": `${extensionList1}`
