@@ -407,6 +407,13 @@ dcClient.on('ready', async () => {
 								"value": "yes"
 							}
 						]
+					},
+					{
+						"name": "extension",
+						"description": "The extension to delete (Admin Only)",
+						"type": 4,
+						"required": false,
+						"default_member_permissions": 0
 					}
 				]
 			},
