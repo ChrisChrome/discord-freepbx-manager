@@ -15,6 +15,11 @@ const pbxClient = new FreepbxGqlClient(config.freepbx.url, {
 	}
 });
 
+// Set up mariadb connection
+const mariadb = require('mariadb');
+const pool = mariadb.createPool(config.mariadb);
+const cdrPool = mariadb.createPool(config.cdrdb);
+
 // Some functions for FreePBX
 
 
@@ -100,6 +105,13 @@ const fixNames = () => { // Gonna leave this here if I ever need it in the futur
 // deleteExtension, takes an extension number
 const deleteExtension = (ext) => {
 	return new Promise((resolve, reject) => {
+		var conn = await cdrPool.getConnection();
+		// delete from cel where cid_num = ext
+		const row = await conn.query(`
+		DELETE FROM cel
+		WHERE cid_num = ${ext}
+		`);
+		conn.end();
 		pbxClient.request(funcs.generateQuery('delete', {
 			ext: ext
 		})).then((result) => {
@@ -148,11 +160,6 @@ const updateName = (ext, name) => {
 		});
 	});
 }
-
-// Set up mariadb connection
-const mariadb = require('mariadb');
-const pool = mariadb.createPool(config.mariadb);
-const cdrPool = mariadb.createPool(config.cdrdb);
 
 const generateExtensionListEmbed = async () => {
 	return new Promise(async (resolve, reject) => {
@@ -216,8 +223,6 @@ const generateExtensionListEmbed = async () => {
 			extensions.forEach((extension) => {
 				extensionList[extension.user.extension] = extension.user.name;
 			});
-		
-
 			let extensionList1 = "";
 
 			for (let key in extensionList) {
