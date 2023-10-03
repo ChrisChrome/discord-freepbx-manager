@@ -172,27 +172,44 @@ const generateExtensionListEmbed = async () => {
 			WHERE cid_num IN (${uniqueExtensions.join(",")}) 
 			AND eventtime >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
 			GROUP BY cid_num
-            `);
+			`);
+
 			const row90 = await conn.query(`
 			SELECT cid_num, MAX(eventtime) 
 			FROM cel 
 			WHERE cid_num IN (${uniqueExtensions.join(",")}) 
 			AND eventtime >= DATE_SUB(CURDATE(), INTERVAL 90 DAY)
 			GROUP BY cid_num
-            `);
+			`);
+			// Get fresh/entirely unused extensions
+			const alltime = await conn.query(`
+			SELECT cid_num
+			FROM cel
+			WHERE cid_num IN (${uniqueExtensions.join(",")})
+			GROUP BY cid_num
+			`);
 			// turn rows into an array of extension numbers
 			let active30 = row30.map(row => row.cid_num);
 			let active90 = row90.map(row => row.cid_num);
+			let used = alltime.map(row => row.cid_num);
 
-			// Generate inactiveFlag object
+
+			// Generate inactiveFlag object, if it's a fresh extension set the flag to -
+
 			let inactiveFlag = {};
 			uniqueExtensions.forEach((ext) => {
-				if (active30.includes(ext)) {
-					inactiveFlag[ext] = "";
-				} else if (active90.includes(ext)) {
-					inactiveFlag[ext] = "*";
+				if (used.includes(ext)) {
+					if (active30.includes(ext)) {
+						if (active90.includes(ext)) {
+							inactiveFlag[ext] = "";
+						} else {
+							inactiveFlag[ext] = "**";
+						}
+					} else {
+						inactiveFlag[ext] = "*";
+					}
 				} else {
-					inactiveFlag[ext] = "**";
+					inactiveFlag[ext] = "-";
 				}
 			});
 
@@ -209,7 +226,7 @@ const generateExtensionListEmbed = async () => {
 			res = {
 				"title": "Extension List",
 				"color": 0x00ff00,
-				"description": `${extensions.length} extensions\n\`* = inactive for 30 days\`\n\`** = inactive for 90 days\``,
+				"description": `${extensions.length} extensions\n\`* = inactive for 30 days\`\n\`** = inactive for 90 days\`\n\`- = never used\``,
 				"fields": [{
 					"name": "Extensions",
 					"value": `${extensionList1}`
