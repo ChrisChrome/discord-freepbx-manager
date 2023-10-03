@@ -104,7 +104,7 @@ const fixNames = () => { // Gonna leave this here if I ever need it in the futur
 
 // deleteExtension, takes an extension number
 const deleteExtension = (ext) => {
-	return new Promise((resolve, reject) => {
+	return new Promise(async (resolve, reject) => {
 		var conn = await cdrPool.getConnection();
 		// delete from cel where cid_num = ext
 		const row = await conn.query(`
