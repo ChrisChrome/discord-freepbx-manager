@@ -25,7 +25,7 @@ const cdrPool = mariadb.createPool(config.cdrdb);
 
 const getExtCount = () => {
 	return new Promise((resolve, reject) => {
-		pbxClient.request(funcs.generateQuery('list', {})).then((result) => {
+		pbxClient.request(funcs.minifyQuery(funcs.generateQuery('list', {}))).then((result) => {
 			resolve(result.fetchAllExtensions.extension.length);
 		}).catch((error) => {
 			reject(error);
@@ -36,9 +36,9 @@ const getExtCount = () => {
 
 const createExtension = (ext, name, uid) => {
 	return new Promise((resolve, reject) => {
-		pbxClient.request(funcs.generateQuery('lookup', {
+		pbxClient.request(funcs.minifyQuery(funcs.generateQuery('lookup', {
 			ext: ext
-		})).then((result) => {
+		}))).then((result) => {
 			// Extension exists
 			res = {
 				"status": "exists",
@@ -46,17 +46,17 @@ const createExtension = (ext, name, uid) => {
 			resolve(res);
 		}).catch((error) => {
 			// Extension does not exist, create it, reload, look it up, and return the result
-			pbxClient.request(funcs.generateQuery('add', {
+			pbxClient.request(funcs.minifyQuery(funcs.generateQuery('add', {
 				ext: ext,
 				name: name,
 				uid: uid
-			})).then((result) => {
-				pbxClient.request(funcs.generateQuery('reload', {
+			}))).then((result) => {
+				pbxClient.request(funcs.minifyQuery(funcs.generateQuery('reload', {
 					id: "CreateExt"
-				})).then((result) => {
-					pbxClient.request(funcs.generateQuery('lookup', {
+				}))).then((result) => {
+					pbxClient.request(funcs.minifyQuery(funcs.generateQuery('lookup', {
 						ext: ext
-					})).then((result) => {
+					}))).then((result) => {
 						res = {
 							"status": "created",
 							"result": result
@@ -76,12 +76,12 @@ const createExtension = (ext, name, uid) => {
 }
 
 const fixNames = () => { // Gonna leave this here if I ever need it in the future
-	pbxClient.request(funcs.generateQuery("list", {})).then((result) => {
+	pbxClient.request(funcs.minifyQuery(funcs.generateQuery("list", {}))).then((result) => {
 		let extensions = result.fetchAllExtensions.extension;
 		extensions.forEach((extension) => {
-			pbxClient.request(funcs.generateQuery("lookup", {
+			pbxClient.request(funcs.minifyQuery(funcs.generateQuery("lookup", {
 				ext: extension.user.extension
-			})).then((result) => {
+			}))).then((result) => {
 				// Get discord user
 				dcClient.users.fetch(result.fetchVoiceMail.email).then((user) => {
 					// Update extension name
@@ -112,12 +112,12 @@ const deleteExtension = (ext) => {
 		WHERE cid_num = ${ext}
 		`);
 		conn.end();
-		pbxClient.request(funcs.generateQuery('delete', {
+		pbxClient.request(funcs.minifyQuery(funcs.generateQuery('delete', {
 			ext: ext
-		})).then((result) => {
-			pbxClient.request(funcs.generateQuery('reload', {
+		}))).then((result) => {
+			pbxClient.request(funcs.minifyQuery(funcs.generateQuery('reload', {
 				id: "DeleteExt"
-			})).then((result) => {
+			}))).then((result) => {
 				res = {
 					"status": "deleted",
 					"result": result
@@ -134,16 +134,16 @@ const deleteExtension = (ext) => {
 
 const updateName = (ext, name) => {
 	return new Promise((resolve, reject) => {
-		pbxClient.request(funcs.generateQuery('lookup', {
+		pbxClient.request(funcs.minifyQuery(funcs.generateQuery('lookup', {
 			ext: ext
-		})).then((result) => {
-			pbxClient.request(funcs.generateQuery('update_name', {
+		}))).then((result) => {
+			pbxClient.request(funcs.minifyQuery(funcs.generateQuery('update_name', {
 				ext: ext,
 				name: name
-			})).then((result) => {
-				pbxClient.request(funcs.generateQuery('reload', {
+			}))).then((result) => {
+				pbxClient.request(funcs.minifyQuery(funcs.generateQuery('reload', {
 					id: "UpdateName"
-				})).then((result) => {
+				}))).then((result) => {
 					res = {
 						"status": "updated",
 						"result": result
@@ -165,7 +165,7 @@ const generateExtensionListEmbed = async () => {
 	return new Promise(async (resolve, reject) => {
 		try {
 			var conn = await cdrPool.getConnection();
-			const result = await pbxClient.request(funcs.generateQuery("list", {}));
+			const result = await pbxClient.request(funcs.minifyQuery(funcs.generateQuery("list", {})));
 			let extensions = result.fetchAllExtensions.extension;
 			let extensionList = {};
 
@@ -250,9 +250,9 @@ const lookupExtension = (ident, type) => { // type is either "ext" or "uid"
 	return new Promise((resolve, reject) => {
 		switch (type) {
 			case "ext":
-				pbxClient.request(funcs.generateQuery('lookup', {
+				pbxClient.request(funcs.minifyQuery(funcs.generateQuery('lookup', {
 					ext: ident
-				})).then((result) => {
+				}))).then((result) => {
 					res = {
 						"status": "exists",
 						"result": result
@@ -268,15 +268,15 @@ const lookupExtension = (ident, type) => { // type is either "ext" or "uid"
 				break;
 			case "uid":
 				// Find the extension based on Discord ID in the voicemail email field
-				pbxClient.request(funcs.generateQuery('list', {})).then(async (result) => {
+				pbxClient.request(funcs.minifyQuery(funcs.generateQuery('list', {}))).then(async (result) => {
 					// loop through all extensions, run a lookup on each one, and return the first one that matches
 					var found = false;
 					var ext = "";
 					var count = 0;
 					result.fetchAllExtensions.extension.forEach(async (ext) => {
-						pbxClient.request(funcs.generateQuery('lookup', {
+						pbxClient.request(funcs.minifyQuery(funcs.generateQuery('lookup', {
 							ext: ext.user.extension
-						})).then((result) => {
+						}))).then((result) => {
 							if (result.fetchVoiceMail.email == ident && !found) {
 								found = true;
 								ext = result;
@@ -312,7 +312,7 @@ const lookupExtension = (ident, type) => { // type is either "ext" or "uid"
 
 const findNextExtension = () => {
 	return new Promise((resolve, reject) => {
-		pbxClient.request(funcs.generateQuery('list', {})).then((result) => {
+		pbxClient.request(funcs.minifyQuery(funcs.generateQuery('list', {}))).then((result) => {
 			// Find the highest extension
 			var highest = 0;
 			// output looks like {fetchAllExtensions: { extension: [{user:{extension: 100, name: "Test"}}]}}
@@ -548,7 +548,7 @@ dcClient.on('ready', async () => {
 		// Lookup all extensions and check if they're still in the server
 		// If they're not, delete them
 		// Run once on startup
-		pbxClient.request(funcs.generateQuery("list", {})).then((result) => {
+		pbxClient.request(funcs.minifyQuery(funcs.generateQuery("list", {}))).then((result) => {
 			let extensions = result.fetchAllExtensions.extension;
 			extensions.forEach((extension) => {
 				lookupExtension(extension.user.extension, "ext").then((result) => {
@@ -582,7 +582,7 @@ dcClient.on('ready', async () => {
 				limit: 1
 			}).then((messages) => {
 				if (messages.size == 0) {
-					pbxClient.request(funcs.generateQuery("list", {})).then((result) => {
+					pbxClient.request(funcs.minifyQuery(funcs.generateQuery("list", {}))).then((result) => {
 						let extensions = result.fetchAllExtensions.extension;
 						// key:value pairs of extension:username
 						let extensionList = {};
@@ -601,7 +601,7 @@ dcClient.on('ready', async () => {
 						})
 					})
 				} else {
-					pbxClient.request(funcs.generateQuery("list", {})).then((result) => {
+					pbxClient.request(funcs.minifyQuery(funcs.generateQuery("list", {}))).then((result) => {
 						let extensions = result.fetchAllExtensions.extension;
 						// key:value pairs of extension:username
 						let extensionList = {};
@@ -627,7 +627,7 @@ dcClient.on('ready', async () => {
 			limit: 1
 		}).then((messages) => {
 			if (messages.size == 0) {
-				pbxClient.request(funcs.generateQuery("list", {})).then((result) => {
+				pbxClient.request(funcs.minifyQuery(funcs.generateQuery("list", {}))).then((result) => {
 					let extensions = result.fetchAllExtensions.extension;
 					// key:value pairs of extension:username
 					let extensionList = {};
@@ -646,7 +646,7 @@ dcClient.on('ready', async () => {
 					});
 				})
 			} else {
-				pbxClient.request(funcs.generateQuery("list", {})).then((result) => {
+				pbxClient.request(funcs.minifyQuery(funcs.generateQuery("list", {}))).then((result) => {
 					let extensions = result.fetchAllExtensions.extension;
 					// key:value pairs of extension:username
 					let extensionList = {};
@@ -932,9 +932,9 @@ dcClient.on('interactionCreate', async interaction => {
 									if (result.length == 0) {
 										// They're not in the group, add them
 										conn.query(`INSERT INTO paging_groups (\`ext\`, \`page_number\`) VALUES (${ext}, ${group})`).then((result) => {
-											pbxClient.request(funcs.generateQuery('reload', {
+											pbxClient.request(funcs.minifyQuery(funcs.generateQuery('reload', {
 												id: "UpdatePaging"
-											})).then(() => {
+											}))).then(() => {
 												interaction.editReply({
 													content: "Added you to the paging group!",
 													ephemeral: true
@@ -969,9 +969,9 @@ dcClient.on('interactionCreate', async interaction => {
 									} else {
 										// They're in the group, remove them
 										conn.query(`DELETE FROM paging_groups WHERE ext = ${ext} AND \`page_number\` = ${group}`).then((result) => {
-											pbxClient.request(funcs.generateQuery('reload', {
+											pbxClient.request(funcs.minifyQuery(funcs.generateQuery('reload', {
 												id: "UpdatePaging"
-											})).then(() => {
+											}))).then(() => {
 												interaction.editReply({
 													content: "Removed you from the paging group!",
 													ephemeral: true
