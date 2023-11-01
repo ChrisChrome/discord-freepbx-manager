@@ -235,13 +235,14 @@ const generateExtensionListEmbed = async () => {
 				"fields": [{
 					"name": "Extensions",
 					"value": `${extensionList1}`
-				}]
+				}],
+				"timestamp": new Date()
 			}
+			console.log("ending conn debug")
+			conn.end();
 			resolve(res);
 		} catch (error) {
 			reject(error);
-		} finally {
-			conn.end();
 		}
 	});
 };
