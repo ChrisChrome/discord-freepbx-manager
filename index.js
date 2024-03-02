@@ -3,6 +3,8 @@ const config = require("./config.json");
 const funcs = require("./funcs.js");
 const colors = require("colors");
 const embeds = require("./embeds.json")
+const axios = require('axios');
+const ping = require("ping")
 // FreePBX GraphQL Client
 const {
 	FreepbxGqlClient,
@@ -670,7 +672,35 @@ dcClient.on('ready', async () => {
 
 	});
 
+	// Uptime Kuma Ping
+	// Calculate ping to Discord API
 
+	// Every X seconds (defined in config.status.interval), send a ping to Uptime Kuma, send push request to config.status.url
+	setInterval(() => {
+		// Send a ping to Uptime Kuma
+		// Send a push request to config.status.url
+		// Define URL arguments ?status=up&msg=OK&ping=
+
+		// Calculate ping to Discord API
+		const start = Date.now();
+		axios.get("https://discord.com/api/gateway").then((result) => {
+			const latency = Date.now() - start;
+			axios.get(config.status.url + `?status=up&msg=OK&ping=${latency}`).then((result) => {
+				//sendLog(`${colors.cyan("[INFO]")} Sent ping to Uptime Kuma`);
+			}).catch((error) => {
+				sendLog(`${colors.red("[ERROR]")} Error sending ping ${error}`);
+			});
+		})
+	}, config.status.interval * 1000);
+	const start = Date.now();
+	axios.get("https://discord.com/api/gateway").then((result) => {
+		const latency = Date.now() - start;
+		axios.get(config.status.url + `?status=up&msg=OK&ping=${latency}`).then((result) => {
+			//sendLog(`${colors.cyan("[INFO]")} Sent ping to Uptime Kuma`);
+		}).catch((error) => {
+			sendLog(`${colors.red("[ERROR]")} Error sending ping ${error}`);
+		});
+	})
 });
 
 dcClient.on("guildMemberRemove", (member) => {
@@ -1282,5 +1312,35 @@ dcClient.on('interactionCreate', async interaction => {
 	}
 });
 
+// Lets actually handle exceptions now
+process.on('unhandledRejection', (error) => {
+	// Log a full error with line number
+	sendLog(`${colors.red("[ERROR]")} ${error}`);
+	// If config.ntfyUrl is set, Send the exception to ntfy
+	if (config.ntfyUrl) fetch(config.ntfyUrl, {
+		method: 'POST', // PUT works too
+		body: error,
+		headers: {
+			'Title': 'FreePBX Bot Rejection',
+			'Priority': 5,
+			'Tags': 'warning,phone,FreePBX Manager'
+		}
+	});
+});
+
+process.on('uncaughtException', (error) => {
+	// Log a full error with line number
+	sendLog(`${colors.red("[ERROR]")} ${error}`);
+	// If config.ntfyUrl is set, Send the exception to ntfy
+	if (config.ntfyUrl) fetch(config.ntfyUrl, {
+		method: 'POST', // PUT works too
+		body: error,
+		headers: {
+			'Title': 'FreePBX Bot Exception',
+			'Priority': 5,
+			'Tags': 'warning,phone,FreePBX Manager'
+		}
+	});
+});
 
 dcClient.login(config.discord.token);

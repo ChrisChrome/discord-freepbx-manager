@@ -9,10 +9,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^1.6.0",
     "colors": "^1.4.0",
     "discord.js": "^14.7.1",
     "freepbx-graphql-client": "^0.1.1",
     "mariadb": "^3.2.0",
+    "ping": "^0.4.4",
     "sqlite3": "^5.1.4"
   }
 }
