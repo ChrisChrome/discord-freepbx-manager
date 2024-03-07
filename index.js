@@ -241,14 +241,13 @@ const generateExtensionListEmbed = async () => {
 			await (async () => {
 				for (let key in extensionList) {
 					field += `\`${key}${inactiveFlag[key]}\`: ${extensionList[key]}\n`;
-					if (cound == 0) {
-						embeds[0].fields = [{
-							"name": "Extensions",
-							"value": field
-						}];
-					}
-					count++;
 					if (field.length >= 1024) {
+						// cut feilds at nearest newline and push to the embed
+						let lastNewline = field.lastIndexOf("\n", 1024);
+						embeds[count].fields = [{
+							"name": "Extensions",
+							"value": field.slice(0, lastNewline)
+						}];
 						embeds.push({
 							"color": 0x00ff00,
 							"description": `${extensions.length} extensions\n\`* = inactive for 30 days\`\n\`** = inactive for 90 days\`\n\`- = never used\``,
@@ -259,8 +258,14 @@ const generateExtensionListEmbed = async () => {
 								}
 							]
 						});
-						field = "";
+						// figure out any extensions that got cut off and add them to the next embed
+						field = field.slice(lastNewline);
+						count++;
 					}
+					embeds[count].fields = [{
+						"name": "Extensions",
+						"value": field
+					}];
 				}
 			})();
 
