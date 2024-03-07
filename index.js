@@ -230,7 +230,12 @@ const generateExtensionListEmbed = async () => {
 			let field = "";
 			let embeds = [];
 			let count = 0;
-
+			embeds.push({
+				"title": "Extension List",
+				"color": 0x00ff00,
+				"description": `${extensions.length} extensions\n\`* = inactive for 30 days\`\n\`** = inactive for 90 days\`\n\`- = never used\``,
+			
+			})
 			for (let key in extensionList) {
 				field += `\`${key}${inactiveFlag[key]}\`: ${extensionList[key]}\n`;
 				count++;
