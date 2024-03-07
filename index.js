@@ -237,7 +237,12 @@ const generateExtensionListEmbed = async () => {
 				if (field.length >= 1024) {
 					embeds.push({
 						"color": 0x00ff00,
-						"description": field
+						"feilds": [
+							{
+								"name": "Extensions",
+								"value": field
+							}
+						]
 					});
 					field = "";
 				}
