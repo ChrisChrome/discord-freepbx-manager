@@ -225,7 +225,7 @@ const generateExtensionListEmbed = async () => {
 			extensions.forEach((extension) => {
 				extensionList[extension.user.extension] = extension.user.name;
 			});
-			
+
 			// fullList will contain embeds, each embed will contain one field with as many extensions as it can fit (up to 1024 characters). Once the feild is full, make a new embed in the array without a title, just a description. The firrst embed will have a title
 			let field = "";
 			let embeds = [];
@@ -234,25 +234,29 @@ const generateExtensionListEmbed = async () => {
 				"title": "Extension List",
 				"color": 0x00ff00,
 				"description": `${extensions.length} extensions\n\`* = inactive for 30 days\`\n\`** = inactive for 90 days\`\n\`- = never used\``,
-			
+
 			})
-			for (let key in extensionList) {
-				field += `\`${key}${inactiveFlag[key]}\`: ${extensionList[key]}\n`;
-				count++;
-				if (field.length >= 1024) {
-					embeds.push({
-						"color": 0x00ff00,
-						"description": `${extensions.length} extensions\n\`* = inactive for 30 days\`\n\`** = inactive for 90 days\`\n\`- = never used\``,
-						"feilds": [
-							{
-								"name": "Extensions",
-								"value": field
-							}
-						]
-					});
-					field = "";
+			// put for loop in function and await it
+
+			await (async () => {
+				for (let key in extensionList) {
+					field += `\`${key}${inactiveFlag[key]}\`: ${extensionList[key]}\n`;
+					count++;
+					if (field.length >= 1024) {
+						embeds.push({
+							"color": 0x00ff00,
+							"description": `${extensions.length} extensions\n\`* = inactive for 30 days\`\n\`** = inactive for 90 days\`\n\`- = never used\``,
+							"feilds": [
+								{
+									"name": "Extensions",
+									"value": field
+								}
+							]
+						});
+						field = "";
+					}
 				}
-			}
+			})();
 
 
 			// for (let key in extensionList) {
