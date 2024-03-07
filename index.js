@@ -236,7 +236,7 @@ const generateExtensionListEmbed = async () => {
 				"title": "Extension List",
 				"color": 0x00ff00,
 				"description": `${extensions.length} extensions\n\`* = inactive for 30 days\`\n\`** = inactive for 90 days\`\n\`- = never used\``,
-
+				timestamp: new Date()
 			})
 			await (async () => {
 				for (let key in extensionList) {
@@ -250,11 +250,11 @@ const generateExtensionListEmbed = async () => {
 						}];
 						embeds.push({
 							"color": 0x00ff00,
-							"description": `${extensions.length} extensions\n\`* = inactive for 30 days\`\n\`** = inactive for 90 days\`\n\`- = never used\``,
 							"feilds": [
 								{
-									"name": "Extensions",
-									"value": field
+									"name": "Extensions (extended)",
+									"value": field,
+									timestamp: new Date()
 								}
 							]
 						});
