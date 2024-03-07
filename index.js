@@ -242,6 +242,7 @@ const generateExtensionListEmbed = async () => {
 				if (field.length >= 1024) {
 					embeds.push({
 						"color": 0x00ff00,
+						"description": `${extensions.length} extensions\n\`* = inactive for 30 days\`\n\`** = inactive for 90 days\`\n\`- = never used\``,
 						"feilds": [
 							{
 								"name": "Extensions",
