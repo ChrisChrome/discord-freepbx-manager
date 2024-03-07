@@ -225,21 +225,41 @@ const generateExtensionListEmbed = async () => {
 			extensions.forEach((extension) => {
 				extensionList[extension.user.extension] = extension.user.name;
 			});
-			let extensionList1 = "";
+			
+			// fullList will contain embeds, each embed will contain one field with as many extensions as it can fit (up to 1024 characters). Once the feild is full, make a new embed in the array without a title, just a description. The firrst embed will have a title
+			let field = "";
+			let embeds = [];
+			let count = 0;
 
 			for (let key in extensionList) {
-				extensionList1 += `\`${key}${inactiveFlag[key]}\`: ${extensionList[key]}\n`;
+				field += `\`${key}${inactiveFlag[key]}\`: ${extensionList[key]}\n`;
+				count++;
+				if (field.length >= 1024) {
+					embeds.push({
+						"color": 0x00ff00,
+						"description": field
+					});
+					field = "";
+				}
 			}
-			res = {
-				"title": "Extension List",
-				"color": 0x00ff00,
-				"description": `${extensions.length} extensions\n\`* = inactive for 30 days\`\n\`** = inactive for 90 days\`\n\`- = never used\``,
-				"fields": [{
-					"name": "Extensions",
-					"value": `${extensionList1}`
-				}],
-				"timestamp": new Date()
-			}
+
+
+			// for (let key in extensionList) {
+			// 	extensionList1 += `\`${key}${inactiveFlag[key]}\`: ${extensionList[key]}\n`;
+			// }
+
+			//});
+			res = embeds;
+			// res = {
+			// 	"title": "Extension List",
+			// 	"color": 0x00ff00,
+			// 	"description": `${extensions.length} extensions\n\`* = inactive for 30 days\`\n\`** = inactive for 90 days\`\n\`- = never used\``,
+			// 	"fields": [{
+			// 		"name": "Extensions",
+			// 		"value": `${extensionList1}`
+			// 	}],
+			// 	"timestamp": new Date()
+			// }
 			console.log("ending conn debug")
 			conn.end();
 			resolve(res);
@@ -599,7 +619,7 @@ dcClient.on('ready', async () => {
 						generateExtensionListEmbed().then(embed => {
 							extListChannel.send({
 								content: "",
-								embeds: [embed]
+								embeds: embed
 							});
 						})
 					})
@@ -618,7 +638,7 @@ dcClient.on('ready', async () => {
 						generateExtensionListEmbed().then(embed => {
 							messages.first().edit({
 								content: "",
-								embeds: [embed]
+								embeds: embed
 							});
 						});
 					})
@@ -644,7 +664,7 @@ dcClient.on('ready', async () => {
 					generateExtensionListEmbed().then(embed => {
 						extListChannel.send({
 							content: "",
-							embeds: [embed]
+							embeds: embed
 						});
 					});
 				})
@@ -663,7 +683,7 @@ dcClient.on('ready', async () => {
 					generateExtensionListEmbed().then(embed => {
 						messages.first().edit({
 							content: "",
-							embeds: [embed]
+							embeds: embed
 						});
 					});
 				})
@@ -823,7 +843,7 @@ dcClient.on('interactionCreate', async interaction => {
 				generateExtensionListEmbed().then((result) => {
 					interaction.editReply({
 						content: "",
-						embeds: [result]
+						embeds: result
 					});
 				}).catch((error) => {
 					interaction.editReply(`Error generating extension list: ${error}`);
