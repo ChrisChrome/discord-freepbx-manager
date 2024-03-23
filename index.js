@@ -5,6 +5,18 @@ const colors = require("colors");
 const embeds = require("./embeds.json")
 const axios = require('axios');
 const ping = require("ping")
+const ssh2 = require('ssh2')
+const sshConn = new ssh2.Client();
+// find first file in .ssh local to the script
+const fs = require('fs');
+const path = require('path');
+// get the first file in the .ssh directory
+const keyPath = path.join(__dirname, '.ssh');
+const keyFiles = fs.readdirSync(keyPath);
+const keyFile = keyFiles[0];
+// read the key file
+const privateKey = fs.readFileSync(".ssh/" + keyFile, 'utf8');
+
 // FreePBX GraphQL Client
 const {
 	FreepbxGqlClient,
@@ -38,28 +50,24 @@ const cdrPool = mariadb.createPool(config.cdrdb);
 const reload = () => {
 	// We're gonna start converting all the old gql commands to using mysql `system fwconsole reload` query
 	return new Promise((resolve, reject) => {
-		// DB connection
-		var conn = pool.getConnection();
-		conn.then((conn) => {
-			conn.query("system fwconsole reload").then((result) => {
-				resolve(result);
-			}).catch((error) => {
-				reject(error);
+		sshConn.exec('fwconsole reload', (err, stream) => {
+			if (err) {
+				reject(err);
+			}
+			stream.on('data', (data) => {
+				// is there a way to send this data without resolving the promise?
+				console.log(data.toString());
 			});
-			conn.end();
-		}).catch((error) => {
-			reject(error);
-		})
+			stream.on('close', (code, signal) => {
+				if (code == 0) {
+					resolve(code);
+				} else {
+					reject("Error reloading FreePBX");
+				}
+			})
+		});
 	});
 }
-
-console.log("Reloading PBX")
-reload().then((result) => {
-	console.log("Reloaded PBX")
-}).catch((error) => {
-	console.log("Error reloading PBX")
-	console.log(error)
-});
 
 const getExtCount = () => {
 	return new Promise((resolve, reject) => {
@@ -89,9 +97,7 @@ const createExtension = (ext, name, uid) => {
 				name: name,
 				uid: uid
 			}))).then((result) => {
-				pbxClient.request(funcs.minifyQuery(funcs.generateQuery('reload', {
-					id: "CreateExt"
-				}))).then((result) => {
+				reload().then((result) => {
 					pbxClient.request(funcs.minifyQuery(funcs.generateQuery('lookup', {
 						ext: ext
 					}))).then((result) => {
@@ -153,9 +159,7 @@ const deleteExtension = (ext) => {
 		pbxClient.request(funcs.minifyQuery(funcs.generateQuery('delete', {
 			ext: ext
 		}))).then((result) => {
-			pbxClient.request(funcs.minifyQuery(funcs.generateQuery('reload', {
-				id: "DeleteExt"
-			}))).then((result) => {
+			reload().then((result) => {
 				res = {
 					"status": "deleted",
 					"result": result
@@ -179,9 +183,7 @@ const updateName = (ext, name) => {
 				ext: ext,
 				name: name
 			}))).then((result) => {
-				pbxClient.request(funcs.minifyQuery(funcs.generateQuery('reload', {
-					id: "UpdateName"
-				}))).then((result) => {
+				reload().then((result) => {
 					res = {
 						"status": "updated",
 						"result": result
@@ -266,7 +268,7 @@ const generateExtensionListEmbed = async () => {
 			let field = "";
 			let embeds = [];
 			let count = 0;
-			
+
 			// put for loop in function and await it
 			embeds.push({
 				"title": "Extension List",
@@ -783,6 +785,26 @@ dcClient.on('ready', async () => {
 			sendLog(`${colors.red("[ERROR]")} Error sending ping ${error}`);
 		});
 	})
+
+	// Start doing SSH stuff
+	sendLog(`${colors.cyan("[INFO]")} Starting SSH connection`);
+	await sshConn.connect({
+		host: config.freepbx.server,
+		username: "root", // Will make config later
+		privateKey: privateKey
+	})
+
+});
+
+sshConn.on('ready', () => {
+	sendLog(`${colors.cyan("[INFO]")} SSH connection established`);
+	console.log("Reloading PBX")
+	reload().then((result) => {
+		console.log("Reloaded PBX")
+	}).catch((error) => {
+		console.log("Error reloading PBX")
+		console.log(error)
+	});
 });
 
 dcClient.on("guildMemberRemove", (member) => {
@@ -1045,9 +1067,7 @@ dcClient.on('interactionCreate', async interaction => {
 									if (result.length == 0) {
 										// They're not in the group, add them
 										conn.query(`INSERT INTO paging_groups (\`ext\`, \`page_number\`) VALUES (${ext}, ${group})`).then((result) => {
-											pbxClient.request(funcs.minifyQuery(funcs.generateQuery('reload', {
-												id: "UpdatePaging"
-											}))).then(() => {
+											reload().then(() => {
 												interaction.editReply({
 													content: "Added you to the paging group!",
 													ephemeral: true
@@ -1082,9 +1102,7 @@ dcClient.on('interactionCreate', async interaction => {
 									} else {
 										// They're in the group, remove them
 										conn.query(`DELETE FROM paging_groups WHERE ext = ${ext} AND \`page_number\` = ${group}`).then((result) => {
-											pbxClient.request(funcs.minifyQuery(funcs.generateQuery('reload', {
-												id: "UpdatePaging"
-											}))).then(() => {
+											reload().then(() => {
 												interaction.editReply({
 													content: "Removed you from the paging group!",
 													ephemeral: true

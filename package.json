@@ -15,6 +15,7 @@
     "freepbx-graphql-client": "^0.1.1",
     "mariadb": "^3.2.0",
     "ping": "^0.4.4",
-    "sqlite3": "^5.1.4"
+    "sqlite3": "^5.1.4",
+    "ssh2": "^1.15.0"
   }
 }

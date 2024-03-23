@@ -136,3 +136,4 @@ config.json.disabled
 test.js
 embeds.json
 pageGroups.json
+.ssh/
