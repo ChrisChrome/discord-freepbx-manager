@@ -1070,16 +1070,20 @@ dcClient.on('interactionCreate', async interaction => {
 				// switch subcommand
 				switch (interaction.options.getSubcommand()) {
 					case "silence": // SSH run `asterisk -x "channel request hangup all"
-						await interaction.deferReply({
-							ephemeral: true
-						});
+						
 						sshConn.exec("asterisk -x 'channel request hangup all'", (err, stream) => {
 							if (err) {
-								interaction.editReply(`Error killing calls: ${err}`);
+								interaction.reply({
+									content: `Error killing calls: ${err}`,
+									ephemeral: true
+								});
 								sendLog(`${colors.red("[ERROR]")} ${err}`);
 							}
 							stream.on("exit", (code) => {
-								interaction.editReply("Killed all calls!");
+								interaction.editReply({
+									content: "Killed all calls!",
+									ephemeral: true
+								});
 								sendLog(`${colors.green("[INFO]")} Silenced all channels`);
 							})
 						});
