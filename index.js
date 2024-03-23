@@ -10,12 +10,22 @@ const {
 	FreepbxGqlClient,
 	gql
 } = require("freepbx-graphql-client");
-const pbxClient = new FreepbxGqlClient(config.freepbx.url, {
+var pbxClient = new FreepbxGqlClient(config.freepbx.url, {
 	client: {
 		id: config.freepbx.clientid,
 		secret: config.freepbx.secret,
 	}
 });
+
+// 50 minute interval to refresh the token
+setInterval(() => {
+	pbxClient = new FreepbxGqlClient(config.freepbx.url, {
+		client: {
+			id: config.freepbx.clientid,
+			secret: config.freepbx.secret,
+		}
+	});
+}, 3000000);
 
 // Set up mariadb connection
 const mariadb = require('mariadb');
@@ -24,6 +34,31 @@ const cdrPool = mariadb.createPool(config.cdrdb);
 
 // Some functions for FreePBX
 
+
+const reload = () => {
+	// We're gonna start converting all the old gql commands to using mysql `system fwconsole reload` query
+	return new Promise((resolve, reject) => {
+		// DB connection
+		var conn = pool.getConnection();
+		conn.then((conn) => {
+			conn.query("system fwconsole reload").then((result) => {
+				resolve(result);
+			}).catch((error) => {
+				reject(error);
+			});
+			conn.end();
+		}).catch((error) => {
+			reject(error);
+		})
+	});
+}
+
+console.log("Reloading PBX")
+reload().then((result) => {
+	console.log("Reloaded PBX")
+}).catch((error) => {
+	console.log("Error reloading PBX")
+});
 
 const getExtCount = () => {
 	return new Promise((resolve, reject) => {
