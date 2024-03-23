@@ -1080,7 +1080,7 @@ dcClient.on('interactionCreate', async interaction => {
 								sendLog(`${colors.red("[ERROR]")} ${err}`);
 							}
 							stream.on("exit", (code) => {
-								interaction.editReply({
+								interaction.reply({
 									content: "Killed all calls!",
 									ephemeral: true
 								});
