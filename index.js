@@ -519,7 +519,7 @@ dcClient.on('ready', async () => {
 			]
 		};
 		
-		var commands = require("./commands.json")
+		var commands = await require("./commands.json")
 
 		commands.push(pageCommand) // This is a test, i have *no* idea if this'll work
 
