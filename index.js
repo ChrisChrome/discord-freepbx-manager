@@ -519,7 +519,7 @@ dcClient.on('ready', async () => {
 				}
 			]
 		};
-		
+
 		// make a non reference copy of the commands object
 		var commands = JSON.parse(JSON.stringify(commandsBase));
 		commands.push(pageCommand);
@@ -1064,6 +1064,77 @@ dcClient.on('interactionCreate', async interaction => {
 					});
 				})
 				conn.end();
+				break;
+
+			case "admin": // Admin commands
+				// switch subcommand
+				switch (interaction.options.getSubcommand()) {
+					case "silence": // SSH run `asterisk -x "channel request hangup all"
+						await interaction.deferReply({
+							ephemeral: true
+						});
+						sshConn.exec("asterisk -x 'channel request hangup all'", (err, stream) => {
+							if (err) {
+								interaction.editReply(`Error killing calls: ${err}`);
+								sendLog(`${colors.red("[ERROR]")} ${err}`);
+							}
+							stream.on('close', (code, signal) => {
+								interaction.editReply("Killed all calls!");
+								sendLog(`${colors.green("[INFO]")} Silenced all channels`);
+							});
+						});
+						break;
+					case "reload": // Reload asterisk and freepbx
+						await interaction.deferReply({
+							ephemeral: true
+						});
+						// We got two commands to run to be safe
+						sshConn.exec("fwconsole reload", (err, stream) => {
+							if (err) {
+								interaction.editReply(`Error reloading FreePBX: ${err}`);
+								sendLog(`${colors.red("[ERROR]")} ${err}`);
+							}
+							stream.on('close', (code, signal) => {
+								sshConn.exec("asterisk -x 'core reload'", (err, stream) => {
+									if (err) {
+										interaction.editReply(`Error reloading Asterisk: ${err}`);
+										sendLog(`${colors.red("[ERROR]")} ${err}`);
+									}
+									stream.on('close', (code, signal) => {
+										interaction.editReply("Reloaded FreePBX and Asterisk!");
+										sendLog(`${colors.green("[INFO]")} Reloaded FreePBX and Asterisk`);
+									});
+								});
+							});
+						});
+						break;
+					case "reboot": // Reboot the whole server (last resort, after this happens kill all connections to the server, then set a 1m timer to kill the bot)
+						await interaction.deferReply({
+							ephemeral: true
+						});
+						sshConn.exec("reboot", (err, stream) => {
+							if (err) {
+								interaction.editReply(`Error rebooting server: ${err}`);
+								sendLog(`${colors.red("[ERROR]")} ${err}`);
+							}
+							stream.on('close', (code, signal) => {
+								interaction.editReply("Rebooting server...\nThe bot will now disconnect and restart in 1 minute. Please stand by...").then(() => {
+									sendLog(`${colors.green("[INFO]")} Rebooting server`);
+									dcClient.destroy().then(() => {
+										console.log("Disconnected from Discord");
+									});
+									conn.end().then(() => {
+										console.log("Disconnected from MySQL");
+									});
+									sshConn.end();
+									console.log("Disconnected from SSH")
+									setTimeout(() => {
+										process.exit();
+									}, 60000);
+								});
+							});
+						});
+				}
 				break;
 			default:
 				break;

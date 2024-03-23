@@ -53,6 +53,32 @@
 		]
 	},
 	{
+		"name": "admin",
+		"description": "Admin only commands",
+		"type": 1,
+		"default_member_permissions": 0,
+		"options": [
+			{
+				"name": "silence",
+				"description": "Kill all ongoing calls",
+				"type": 1,
+				"default_member_permissions": 0
+			},
+			{
+				"name": "reload",
+				"description": "Run asterisk reload",
+				"type": 1,
+				"default_member_permissions": 0
+			},
+			{
+				"name": "reboot",
+				"description": "Reboot the server (LAST RESORT)",
+				"type": 1,
+				"default_member_permissions": 0
+			}
+		]
+	},
+	{
 		"name": "Lookup Extension",
 		"type": 2
 	},
