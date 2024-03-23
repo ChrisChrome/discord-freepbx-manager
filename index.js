@@ -59,7 +59,7 @@ const reload = () => {
 				// is there a way to send this data without resolving the promise?
 				console.log(data.toString());
 			});
-			stream.on('close', (code, signal) => {
+			stream.on('exit', (code, signal) => {
 				if (code == 0) {
 					resolve(code);
 				} else {
@@ -1078,10 +1078,10 @@ dcClient.on('interactionCreate', async interaction => {
 								interaction.editReply(`Error killing calls: ${err}`);
 								sendLog(`${colors.red("[ERROR]")} ${err}`);
 							}
-							stream.on('close', (code, signal) => {
+							stream.on("exit", (code) => {
 								interaction.editReply("Killed all calls!");
 								sendLog(`${colors.green("[INFO]")} Silenced all channels`);
-							});
+							})
 						});
 						break;
 					case "reload": // Reload asterisk and freepbx
@@ -1094,13 +1094,13 @@ dcClient.on('interactionCreate', async interaction => {
 								interaction.editReply(`Error reloading FreePBX: ${err}`);
 								sendLog(`${colors.red("[ERROR]")} ${err}`);
 							}
-							stream.on('close', (code, signal) => {
+							stream.on('exit', (code, signal) => {
 								sshConn.exec("asterisk -x 'core reload'", (err, stream) => {
 									if (err) {
 										interaction.editReply(`Error reloading Asterisk: ${err}`);
 										sendLog(`${colors.red("[ERROR]")} ${err}`);
 									}
-									stream.on('close', (code, signal) => {
+									stream.on('exit', (code, signal) => {
 										interaction.editReply("Reloaded FreePBX and Asterisk!");
 										sendLog(`${colors.green("[INFO]")} Reloaded FreePBX and Asterisk`);
 									});
@@ -1117,7 +1117,7 @@ dcClient.on('interactionCreate', async interaction => {
 								interaction.editReply(`Error rebooting server: ${err}`);
 								sendLog(`${colors.red("[ERROR]")} ${err}`);
 							}
-							stream.on('close', (code, signal) => {
+							stream.on('exit', (code, signal) => {
 								interaction.editReply("Rebooting server...\nThe bot will now disconnect and restart in 1 minute. Please stand by...").then(() => {
 									sendLog(`${colors.green("[INFO]")} Rebooting server`);
 									dcClient.destroy().then(() => {
