@@ -58,6 +58,7 @@ reload().then((result) => {
 	console.log("Reloaded PBX")
 }).catch((error) => {
 	console.log("Error reloading PBX")
+	console.log(error)
 });
 
 const getExtCount = () => {
