@@ -324,7 +324,6 @@ const generateExtensionListEmbed = async () => {
 			// 	}],
 			// 	"timestamp": new Date()
 			// }
-			console.log("ending conn debug")
 			conn.end();
 			resolve(res);
 		} catch (error) {
@@ -489,105 +488,40 @@ dcClient.on('ready', async () => {
 		sendLog(`${colors.cyan("[INFO]")} Logged in as ${dcClient.user.displayName}!`);
 
 		const pageGroups = require('./pageGroups.json');
-		var commands = [
-			{
-				"name": "whoami",
-				"description": "Get your extension info if you have one",
-				"type": 1
-			},
-			{
-				"name": "new",
-				"description": "Get an extension on the LiteNet Phone System",
-				"type": 1
-			},
-			{
-				"name": "delete",
-				"description": "Remove your extension from the LiteNet Phone System",
-				"type": 1,
-				"options": [
-					{
-						"name": "confirm",
-						"description": "Confirm that you want to delete your extension. THIS CANNOT BE UNDONE!",
-						"type": 5,
-						"required": true,
-						"choices": [
-							{
-								"name": "yes",
-								"value": "yes"
-							}
-						]
-					}
-				]
-			},
-			{
-				"name": "list",
-				"description": "List all extensions on the LiteNet Phone System",
-				"type": 1
-			},
-			{
-				"name": "button",
-				"description": "Send the get an extension button!",
-				"type": 1,
-				"default_member_permissions": 0
-			},
-			{
-				"name": "name",
-				"description": "Change your extension's name (Defaults to your Discord name)",
-				"type": 1,
-				"options": [
-					{
-						"name": "name",
-						"description": "The new name for your extension",
-						"type": 3,
-						"required": false
-					}
-				]
-			},
-			{
-				"name": "paging",
-				"description": "Add/Remove yourself from paging groups",
-				"type": 1,
-				"options": [
-					{
-						"name": "method",
-						"description": "The method to use",
-						"type": 3,
-						"required": true,
-						"choices": [
-							{
-								"name": "add",
-								"value": "add"
-							},
-							{
-								"name": "remove",
-								"value": "remove"
-							}
-						]
-					},
-					{
-						"name": "group",
-						"description": "The group to add/remove yourself from",
-						"type": 3,
-						"required": true,
-						"choices": pageGroups
-					}
-				]
-			},
-			{
-				"name": "Lookup Extension",
-				"type": 2,
-			},
-			{
-				"name": "Create Extension",
-				"type": 2,
-				"default_member_permissions": 0
-			},
-			{
-				"name": "Delete Extension",
-				"type": 2,
-				"default_member_permissions": 0
-			}
-		];
+		const pageCommand = {
+			"name": "paging",
+			"description": "Add/Remove yourself from paging groups",
+			"type": 1,
+			"options": [
+				{
+					"name": "method",
+					"description": "The method to use",
+					"type": 3,
+					"required": true,
+					"choices": [
+						{
+							"name": "add",
+							"value": "add"
+						},
+						{
+							"name": "remove",
+							"value": "remove"
+						}
+					]
+				},
+				{
+					"name": "group",
+					"description": "The group to add/remove yourself from",
+					"type": 3,
+					"required": true,
+					"choices": pageGroups
+				}
+			]
+		};
+		
+		var commands = require("./commands.json")
+
+		commands.push(pageCommand) // This is a test, i have *no* idea if this'll work
 
 
 		(async () => {
