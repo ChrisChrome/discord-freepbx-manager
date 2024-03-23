@@ -5,6 +5,7 @@ const colors = require("colors");
 const embeds = require("./embeds.json")
 const axios = require('axios');
 const ping = require("ping")
+var commandsBase = require("./commands.json")
 const ssh2 = require('ssh2')
 const sshConn = new ssh2.Client();
 // find first file in .ssh local to the script
@@ -519,9 +520,9 @@ dcClient.on('ready', async () => {
 			]
 		};
 		
-		var commands = await require("./commands.json")
-
-		commands.push(pageCommand) // This is a test, i have *no* idea if this'll work
+		// make a non reference copy of the commands object
+		var commands = JSON.parse(JSON.stringify(commandsBase));
+		commands.push(pageCommand);
 
 
 		(async () => {
