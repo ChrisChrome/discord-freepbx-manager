@@ -1177,7 +1177,10 @@ dcClient.on('interactionCreate', async interaction => {
 								if (outputStream.length > 2000) {
 									// make the buffer
 									const buffer = Buffer.from(outputStream, 'utf-8');
-									const attachment = new Discord.MessageAttachment(buffer, 'output.txt');
+									const attachment = {
+										name: "output.txt",
+										content: buffer
+									}
 									msgJson.files = [attachment];
 									msgJson.content = `Ran command \`${cmd}\`\nOutput too long, sending as a file`
 								}
