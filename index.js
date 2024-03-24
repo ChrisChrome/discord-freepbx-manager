@@ -1179,7 +1179,7 @@ dcClient.on('interactionCreate', async interaction => {
 									const buffer = Buffer.from(outputStream, 'utf-8');
 									const attachment = {
 										name: "output.txt",
-										content: buffer
+										attachment: buffer
 									}
 									msgJson.files = [attachment];
 									msgJson.content = `Ran command \`${cmd}\`\nOutput too long, sending as a file`
