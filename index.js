@@ -1167,8 +1167,6 @@ dcClient.on('interactionCreate', async interaction => {
 								outputStream += `${data}`
 							})
 							stream.on('exit', (code, signal) => {
-								console.log(`Ran command ${cmd}:\n${outputStream}`)
-								console.log("TEST" + outputStream.length)
 								// generate message json
 								const msgJson = {
 									content: `Ran command \`${cmd}\`\n\`\`\`ansi\n${outputStream}\`\`\``
@@ -1208,7 +1206,83 @@ dcClient.on('interactionCreate', async interaction => {
 						}, 1000);
 						break;
 					case "asterisk": // Asterisk CLI command
-						break; // for now
+						await interaction.deferReply({
+							ephemeral: true
+						});
+						let cmd2 = interaction.options.get("command").value;
+						sshConn.exec(`asterisk -x '${cmd2}'`, (err, stream) => {
+							if (err) {
+								interaction.editReply(`Error running command: ${err}`);
+								sendLog(`${colors.red("[ERROR]")} ${err}`);
+							}
+							outputStream = ""
+							stream.on("data", (data) => {
+								outputStream += `${data}`
+							})
+							stream.on('exit', (code, signal) => {
+								// generate message json
+								const msgJson = {
+									content: `Ran command \`${cmd2}\`\n\`\`\`ansi\n${outputStream}\`\`\``
+								}
+								// outputStream is too long for Discord, so we need to send it as a file
+								if (outputStream.length > 2000) {
+									// make the buffer
+									const buffer = Buffer.from(outputStream, 'utf-8');
+									const attachment = {
+										name: "output.txt",
+										attachment: buffer
+									}
+									msgJson.files = [attachment];
+									msgJson.content = `Ran command \`${cmd2}\`\nOutput too long, sending as a file`
+								}
+								interaction.editReply(msgJson);
+								sendLog(`${colors.green("[INFO]")} Ran command ${cmd2}`);
+							});
+						});
+						break;
+					case "shell": // This is dangerous, only allow developers to use it
+						await interaction.deferReply({
+							ephemeral: true
+						});
+						let cmd3 = interaction.options.get("command").value;
+						let cmd3timeout = interaction.options.get("timeout").value;
+						sshConn.exec(cmd3, (err, stream) => {
+							if (err) {
+								interaction.editReply(`Error running command: ${err}`);
+								sendLog(`${colors.red("[ERROR]")} ${err}`);
+							}
+							// if timeout is set, set a timeout before
+							timeout = setTimeout(() => {
+								stream.close();
+								interaction.editReply(`Command timed out after ${cmd3timeout}ms`);
+							})
+							outputStream = ""
+							stream.on("data", (data) => {
+								outputStream += `${data}`
+							})
+							stream.on('exit', (code, signal) => {
+								// clear the timeout
+								clearTimeout(timeout);
+								// generate message json
+								const msgJson = {
+									content: `Ran command \`${cmd3}\`\n\`\`\`ansi\n${outputStream}\`\`\``
+								}
+								// outputStream is too long for Discord, so we need to send it as a file
+								if (outputStream.length > 2000) {
+									// make the buffer
+									const buffer = Buffer.from(outputStream, 'utf-8');
+									const attachment = {
+										name: "output.txt",
+										attachment: buffer
+									}
+									msgJson.files = [attachment];
+									msgJson.content = `Ran command \`${cmd3}\`\nOutput too long, sending as a file`
+								}
+								interaction.editReply(msgJson);
+								sendLog(`${colors.green("[INFO]")} Ran command ${cmd3}`);
+							});
+						});
+						break;
 				}
 				break;
 			default:
