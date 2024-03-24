@@ -1169,7 +1169,19 @@ dcClient.on('interactionCreate', async interaction => {
 							stream.on('exit', (code, signal) => {
 								console.log(`Ran command ${cmd}:\n${outputStream}`)
 								console.log("TEST" + outputStream.length)
-								interaction.editReply(`Ran command ${cmd}:\n\`\`\`ansi\n${outputStream}\n\`\`\``);
+								// generate message json
+								const msgJson = {
+									content: `Ran command \`${cmd}\`\n\`\`\`ansi\n${outputStream}\`\`\``
+								}
+								// outputStream is too long for Discord, so we need to send it as a file
+								if (outputStream.length > 2000) {
+									// make the buffer
+									const buffer = Buffer.from(outputStream, 'utf-8');
+									const attachment = new Discord.MessageAttachment(buffer, 'output.txt');
+									msgJson.files = [attachment];
+									msgJson.content = `Ran command \`${cmd}\`\nOutput too long, sending as a file`
+								}
+								interaction.editReply(msgJson);
 								sendLog(`${colors.green("[INFO]")} Ran command ${cmd}`);
 							});
 						});
