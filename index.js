@@ -1167,6 +1167,8 @@ dcClient.on('interactionCreate', async interaction => {
 								outputStream += `${data}\n`
 							})
 							stream.on('exit', (code, signal) => {
+								console.log(`Ran command ${cmd}:\n${outputStream}`)
+								console.log("TEST" + outputStream.length)
 								interaction.editReply(`Ran command ${cmd}:\n\`\`\`ansi\n${outputStream}\n\`\`\``);
 								sendLog(`${colors.green("[INFO]")} Ran command ${cmd}`);
 							});
