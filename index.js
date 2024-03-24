@@ -1245,24 +1245,25 @@ dcClient.on('interactionCreate', async interaction => {
 							ephemeral: true
 						});
 						let cmd3 = interaction.options.get("command").value;
-						let cmd3timeout = interaction.options.get("timeout").value;
+						// TODO: Timeout
+						//let cmd3timeout = interaction.options.get("timeout").value;
 						sshConn.exec(cmd3, (err, stream) => {
 							if (err) {
 								interaction.editReply(`Error running command: ${err}`);
 								sendLog(`${colors.red("[ERROR]")} ${err}`);
 							}
 							// if timeout is set, set a timeout before
-							timeout = setTimeout(() => {
-								stream.close();
-								interaction.editReply(`Command timed out after ${cmd3timeout}ms`);
-							})
+							//timeout = setTimeout(() => {
+							//	stream.close();
+							//	interaction.editReply(`Command timed out after ${cmd3timeout}ms`);
+							//})
 							outputStream = ""
 							stream.on("data", (data) => {
 								outputStream += `${data}`
 							})
 							stream.on('exit', (code, signal) => {
 								// clear the timeout
-								clearTimeout(timeout);
+								//clearTimeout(timeout);
 								// generate message json
 								const msgJson = {
 									content: `Ran command \`${cmd3}\`\n\`\`\`ansi\n${outputStream}\`\`\``
