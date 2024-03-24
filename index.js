@@ -1162,8 +1162,14 @@ dcClient.on('interactionCreate', async interaction => {
 								interaction.editReply(`Error running command: ${err}`);
 								sendLog(`${colors.red("[ERROR]")} ${err}`);
 							}
+							outputStream = ""
 							stream.on("data", (data) => {
-								console.log("DATA: " + data);
+								outputStream += `${data}\n`
+								clearTimeout(outputTimeout);
+								outputTimeout = setTimeout(() => {
+									interaction.editReply(`\`\`\`ansi\n${outputStream}\`\`\``);
+
+								}, 150);
 							})
 							stream.on('exit', (code, signal) => {
 								interaction.editReply(`Ran command \`${cmd}\``);
