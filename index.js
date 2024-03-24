@@ -1164,7 +1164,7 @@ dcClient.on('interactionCreate', async interaction => {
 							}
 							outputStream = ""
 							stream.on("data", (data) => {
-								outputStream += `${data}\n`
+								outputStream += `${data}`
 							})
 							stream.on('exit', (code, signal) => {
 								console.log(`Ran command ${cmd}:\n${outputStream}`)
