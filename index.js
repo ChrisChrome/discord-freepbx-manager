@@ -1070,7 +1070,7 @@ dcClient.on('interactionCreate', async interaction => {
 				// switch subcommand
 				switch (interaction.options.getSubcommand()) {
 					case "silence": // SSH run `asterisk -x "channel request hangup all"
-						
+
 						sshConn.exec("asterisk -x 'channel request hangup all'", (err, stream) => {
 							if (err) {
 								interaction.reply({
@@ -1138,6 +1138,59 @@ dcClient.on('interactionCreate', async interaction => {
 								});
 							});
 						});
+				}
+				break;
+			case "dev": // Developer commands
+				// check if the user is a developer
+				if (!config.discord.developers.includes(interaction.user.id)) {
+					interaction.reply({
+						content: "You're not a developer!",
+						ephemeral: true
+					});
+					break;
+				}
+
+				// switch subcommand
+				switch (interaction.options.getSubcommand()) {
+					case "fwconsole": // Run a fwconsole command
+						await interaction.deferReply({
+							ephemeral: true
+						});
+						let cmd = interaction.options.get("command").value;
+						sshConn.exec(`fwconsole ${cmd}`, (err, stream) => {
+							if (err) {
+								interaction.editReply(`Error running command: ${err}`);
+								sendLog(`${colors.red("[ERROR]")} ${err}`);
+							}
+							stream.on("data", (data) => {
+								console.log("DATA: " + data);
+							})
+							stream.on('exit', (code, signal) => {
+								interaction.editReply(`Ran command \`${cmd}\``);
+								sendLog(`${colors.green("[INFO]")} Ran command ${cmd}`);
+							});
+						});
+						break;
+					case "restart": // Restart the bot
+						await interaction.reply({
+							content: "Restarting the bot...",
+							ephemeral: true
+						})
+						sendLog(`${colors.green("[INFO]")} Restarting the bot`);
+						dcClient.destroy().then(() => {
+							console.log("Disconnected from Discord");
+						});
+						conn.end().then(() => {
+							console.log("Disconnected from MySQL");
+						});
+						sshConn.end();
+						console.log("Disconnected from SSH")
+						setTimeout(() => {
+							process.exit();
+						}, 1000);
+						break;
+					case "asterisk": // Asterisk CLI command
+						break; // for now
 				}
 				break;
 			default:

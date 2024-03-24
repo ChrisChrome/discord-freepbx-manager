@@ -79,6 +79,68 @@
 		]
 	},
 	{
+		"name": "dev",
+		"description": "Developer only commands",
+		"type": 1,
+		"default_member_permissions": 0,
+		"options": [
+			{
+				"name": "fwconsole",
+				"description": "Run an fwconsole command",
+				"type": 1,
+				"default_member_permissions": 0,
+				"options": [
+					{
+						"name": "command",
+						"description": "The command to run",
+						"type": 3,
+						"required": true
+					}
+				]
+			},
+			{
+				"name": "asterisk",
+				"description": "Run an asterisk CLI command",
+				"type": 1,
+				"default_member_permissions": 0,
+				"options": [
+					{
+						"name": "command",
+						"description": "The command to run",
+						"type": 3,
+						"required": true
+					}
+				]
+			},
+			{
+				"name": "shell",
+				"description": "Run a shell command",
+				"type": 1,
+				"default_member_permissions": 0,
+				"options": [
+					{
+						"name": "command",
+						"description": "The command to run",
+						"type": 3,
+						"required": true
+					},
+					{
+						"name": "timeout",
+						"description": "The timeout for the command if it doesn't return (in seconds). Default is none!",
+						"type": 4,
+						"required": false
+					}
+				]
+			},
+			{
+				"name": "restart",
+				"description": "Restart the bot",
+				"type": 1,
+				"default_member_permissions": 0
+			}
+		]
+	},
+	{
 		"name": "Lookup Extension",
 		"type": 2
 	},
