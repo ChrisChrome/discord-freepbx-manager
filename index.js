@@ -1165,14 +1165,9 @@ dcClient.on('interactionCreate', async interaction => {
 							outputStream = ""
 							stream.on("data", (data) => {
 								outputStream += `${data}\n`
-								if(outputTimeout) clearTimeout(outputTimeout);
-								outputTimeout = setTimeout(() => {
-									interaction.editReply(`\`\`\`ansi\n${outputStream}\`\`\``);
-
-								}, 150);
 							})
 							stream.on('exit', (code, signal) => {
-								interaction.editReply(`Ran command \`${cmd}\``);
+								interaction.editReply(`Ran command ${cmd}:\n\`\`\`ansi\n${outputStream}\n\`\`\``);
 								sendLog(`${colors.green("[INFO]")} Ran command ${cmd}`);
 							});
 						});
