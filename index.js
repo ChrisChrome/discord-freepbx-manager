@@ -1165,7 +1165,7 @@ dcClient.on('interactionCreate', async interaction => {
 							outputStream = ""
 							stream.on("data", (data) => {
 								outputStream += `${data}\n`
-								clearTimeout(outputTimeout);
+								if(outputTimeout) clearTimeout(outputTimeout);
 								outputTimeout = setTimeout(() => {
 									interaction.editReply(`\`\`\`ansi\n${outputStream}\`\`\``);
 
