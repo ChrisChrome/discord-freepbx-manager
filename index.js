@@ -749,7 +749,7 @@ dcClient.on('ready', async () => {
 
 });
 
-sshConn.on('ready', await () => {
+sshConn.on('ready', async () => {
 	sendLog(`${colors.cyan("[INFO]")} SSH connection established`);
 	console.log("Reloading PBX")
 	reload().then((result) => {
