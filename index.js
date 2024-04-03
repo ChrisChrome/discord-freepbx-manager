@@ -600,6 +600,22 @@ dcClient.on('ready', async () => {
 		// Find the latest message from the bot in extListChannel, if there isn't one, send one. There can be other messages in the channel
 		// Sends the same message as the list command
 		setInterval(async () => {
+			// run this goofy query just to make sure everything is happy
+			/*
+			DELETE FROM devices
+			WHERE id NOT IN (SELECT extension FROM users);
+			*/
+			// This will delete any devices that don't have a corresponding user
+			// This is a safety measure to prevent orphaned devices (it breaks the API entirely if there are any)
+			const conn = await pool.getConnection();
+			const row = await conn.query(`
+			DELETE FROM devices
+			WHERE id NOT IN (SELECT extension FROM users);
+			`).then((result) => {
+				conn.end();
+			});
+
+
 			await extListChannel.messages.fetch({
 				limit: 1
 			}).then((messages) => {
