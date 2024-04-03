@@ -489,7 +489,10 @@ dcClient.on('ready', async () => {
 			}
 			console.log(message);
 		};
-
+		const conn = await pool.getConnection();
+		await conn.query(`DELETE FROM devices WHERE id NOT IN (SELECT extension FROM users);`)
+		await conn.query(`DELETE FROM sip WHERE id NOT IN (SELECT extension FROM users);`);
+		conn.end();
 		sendLog(`${colors.cyan("[INFO]")} Logged in as ${dcClient.user.displayName}!`);
 
 		const pageGroups = require('./pageGroups.json');
@@ -749,7 +752,7 @@ dcClient.on('ready', async () => {
 
 });
 
-sshConn.on('ready', async () => {
+sshConn.on('ready', () => {
 	sendLog(`${colors.cyan("[INFO]")} SSH connection established`);
 	console.log("Reloading PBX")
 	reload().then((result) => {
@@ -759,10 +762,7 @@ sshConn.on('ready', async () => {
 		console.log(error)
 	});
 });
-const conn = await pool.getConnection();
-await conn.query(`DELETE FROM devices WHERE id NOT IN (SELECT extension FROM users);`)
-await conn.query(`DELETE FROM sip WHERE id NOT IN (SELECT extension FROM users);`);
-conn.end();
+
 
 dcClient.on("guildMemberRemove", (member) => {
 	// Delete the extension if the user leaves the server
