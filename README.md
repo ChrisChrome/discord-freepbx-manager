@@ -1,6 +1,6 @@
 # FreePBX Manager
 
-[![License](https://img.shields.io/badge/license-GPL--3.0-blue)](https://github.com/ChrisChrome/freepbx-manager/blob/main/LICENSE)
+[![License](https://img.shields.io/badge/license-GPL--3.0-blue)](https://github.com/ChrisChrome/discord-freepbx-manager/blob/main/LICENSE)
 
 ## Description
 FreePBX Manager is a Discord bot designed to manage FreePBX configurations. Please note that this project is currently a hot mess and may not be suitable for production use.
@@ -10,9 +10,9 @@ To set up the config file, follow the steps below:
 
 1. Clone the repository:
    ```shell
-   git clone https://github.com/ChrisChrome/freepbx-manager.git
+   git clone https://github.com/ChrisChrome/discord-freepbx-manager.git
 
-   cd freepbx-manager
+   cd discord-freepbx-manager
    ```
 2. Install the required dependencies:
    ```shell
