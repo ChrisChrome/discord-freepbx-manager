@@ -82,7 +82,16 @@ const getExtCount = () => {
 
 
 const createExtension = (ext, name, uid) => {
-	return new Promise((resolve, reject) => {
+	return new Promise(async (resolve, reject) => {
+		const conn = await pool.getConnection();
+		await conn.query(`
+			DELETE FROM devices
+			WHERE id NOT IN (SELECT extension FROM users);
+			DELETE FROM sip
+			WHERE id NOT IN (SELECT extension FROM users);
+			`).then((result) => {
+			conn.end();
+		});
 		pbxClient.request(funcs.minifyQuery(funcs.generateQuery('lookup', {
 			ext: ext
 		}))).then((result) => {
@@ -608,12 +617,15 @@ dcClient.on('ready', async () => {
 			// This will delete any devices that don't have a corresponding user
 			// This is a safety measure to prevent orphaned devices (it breaks the API entirely if there are any)
 			const conn = await pool.getConnection();
-			const row = await conn.query(`
+			await conn.query(`
 			DELETE FROM devices
+			WHERE id NOT IN (SELECT extension FROM users);
+			DELETE FROM sip
 			WHERE id NOT IN (SELECT extension FROM users);
 			`).then((result) => {
 				conn.end();
 			});
+
 
 
 			await extListChannel.messages.fetch({
