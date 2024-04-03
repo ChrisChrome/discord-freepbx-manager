@@ -5,6 +5,20 @@
 ## Description
 FreePBX Manager is a Discord bot designed to manage FreePBX configurations. Please note that this project is currently a hot mess and may not be suitable for production use.
 
+## Pre-requisites
+- [Node.js](https://nodejs.org/en/download/)
+- [FreePBX](https://www.freepbx.org/)
+- [A Discord Bot](https://discord.com/developers/applications)
+
+## Features
+- [x] User-created extensions
+- [x] Automatic extension creation
+- [x] Extension deletion
+- [x] Extension status
+- [x] Extension list
+
+- Probably some more stuff that I forgot to write down lol
+
 ## Setup
 To set up the config file, follow the steps below:
 
