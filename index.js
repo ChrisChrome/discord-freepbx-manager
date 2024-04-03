@@ -84,14 +84,9 @@ const getExtCount = () => {
 const createExtension = (ext, name, uid) => {
 	return new Promise(async (resolve, reject) => {
 		const conn = await pool.getConnection();
-		await conn.query(`
-			DELETE FROM devices
-			WHERE id NOT IN (SELECT extension FROM users);
-			DELETE FROM sip
-			WHERE id NOT IN (SELECT extension FROM users);
-			`).then((result) => {
-			conn.end();
-		});
+		await conn.query(`DELETE FROM devices WHERE id NOT IN (SELECT extension FROM users);`)
+		await conn.query(`DELETE FROM sip WHERE id NOT IN (SELECT extension FROM users);`);
+		conn.end();
 		pbxClient.request(funcs.minifyQuery(funcs.generateQuery('lookup', {
 			ext: ext
 		}))).then((result) => {
@@ -617,14 +612,9 @@ dcClient.on('ready', async () => {
 			// This will delete any devices that don't have a corresponding user
 			// This is a safety measure to prevent orphaned devices (it breaks the API entirely if there are any)
 			const conn = await pool.getConnection();
-			await conn.query(`
-			DELETE FROM devices
-			WHERE id NOT IN (SELECT extension FROM users);
-			DELETE FROM sip
-			WHERE id NOT IN (SELECT extension FROM users);
-			`).then((result) => {
-				conn.end();
-			});
+			await conn.query(`DELETE FROM devices WHERE id NOT IN (SELECT extension FROM users);`)
+			await conn.query(`DELETE FROM sip WHERE id NOT IN (SELECT extension FROM users);`);
+			conn.end();
 
 
 
@@ -769,6 +759,10 @@ sshConn.on('ready', () => {
 		console.log(error)
 	});
 });
+const conn = await pool.getConnection();
+await conn.query(`DELETE FROM devices WHERE id NOT IN (SELECT extension FROM users);`)
+await conn.query(`DELETE FROM sip WHERE id NOT IN (SELECT extension FROM users);`);
+conn.end();
 
 dcClient.on("guildMemberRemove", (member) => {
 	// Delete the extension if the user leaves the server
