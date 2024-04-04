@@ -183,20 +183,13 @@ const updateName = (ext, name) => {
 	return new Promise(async (resolve, reject) => {
 		// update the extension name in the `users` table
 		const conn = await pool.getConnection();
-		conn.query(`UPDATE users SET name = '${name}' WHERE extension = ${ext};`).then((result) => {
-			// Run a reload
-			reload().then((result) => {
-				res = {
-					"status": "updated",
-					"result": result
-				}
-				resolve(res);
-			}).catch((error) => {
-				reject(error);
-			});
-		}).catch((error) => {
-			reject(error);
-		});
+		await conn.query(`UPDATE users SET name = '${name}' WHERE extension = ${ext};`)
+		await conn.query(`UPDATE sip WHERE id = ${ext} AND keyword = 'callerid' SET data = '${name} <${ext}>';`);
+		conn.end();
+		resolve({
+			"status": "updated",
+			"result": name
+		})
 	});
 }
 
