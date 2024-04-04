@@ -187,10 +187,15 @@ const updateName = (ext, name) => {
 		//await conn.query(`UPDATE sip WHERE id = ${ext} AND keyword = 'callerid' SET data = '${name} <${ext}>';`); // this query is borked, im bad at sql
 		await conn.query(`UPDATE sip SET data = '${name} <${ext}>' WHERE id = ${ext} AND keyword = 'callerid';`);
 		conn.end();
-		resolve({
-			"status": "updated",
-			"result": name
-		})
+		// reload
+		reload().then((result) => {
+			resolve({
+				"status": "updated",
+				"result": name
+			})
+		}).catch((error) => {
+			reject(error);
+		});
 	});
 }
 
