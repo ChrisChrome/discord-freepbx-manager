@@ -180,9 +180,9 @@ const deleteExtension = (ext) => {
 }
 
 const updateName = (ext, name) => {
-	return new Promise((resolve, reject) => {
+	return new Promise(async (resolve, reject) => {
 		// update the extension name in the `users` table
-		const conn = pool.getConnection();
+		const conn = await pool.getConnection();
 		conn.query(`UPDATE users SET name = '${name}' WHERE extension = ${ext};`).then((result) => {
 			// Run a reload
 			reload().then((result) => {
