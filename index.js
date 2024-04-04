@@ -184,7 +184,8 @@ const updateName = (ext, name) => {
 		// update the extension name in the `users` table
 		const conn = await pool.getConnection();
 		await conn.query(`UPDATE users SET name = '${name}' WHERE extension = ${ext};`)
-		await conn.query(`UPDATE sip WHERE id = ${ext} AND keyword = 'callerid' SET data = '${name} <${ext}>';`);
+		//await conn.query(`UPDATE sip WHERE id = ${ext} AND keyword = 'callerid' SET data = '${name} <${ext}>';`); // this query is borked, im bad at sql
+		await conn.query(`UPDATE sip SET data = '${name} <${ext}>' WHERE id = ${ext} AND keyword = 'callerid';`);
 		conn.end();
 		resolve({
 			"status": "updated",
