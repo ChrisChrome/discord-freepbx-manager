@@ -181,22 +181,16 @@ const deleteExtension = (ext) => {
 
 const updateName = (ext, name) => {
 	return new Promise((resolve, reject) => {
-		pbxClient.request(funcs.minifyQuery(funcs.generateQuery('lookup', {
-			ext: ext
-		}))).then((result) => {
-			pbxClient.request(funcs.minifyQuery(funcs.generateQuery('update_name', {
-				ext: ext,
-				name: name
-			}))).then((result) => {
-				reload().then((result) => {
-					res = {
-						"status": "updated",
-						"result": result
-					}
-					resolve(res);
-				}).catch((error) => {
-					reject(error);
-				});
+		// update the extension name in the `users` table
+		const conn = pool.getConnection();
+		conn.query(`UPDATE users SET name = '${name}' WHERE extension = ${ext};`).then((result) => {
+			// Run a reload
+			reload().then((result) => {
+				res = {
+					"status": "updated",
+					"result": result
+				}
+				resolve(res);
 			}).catch((error) => {
 				reject(error);
 			});
